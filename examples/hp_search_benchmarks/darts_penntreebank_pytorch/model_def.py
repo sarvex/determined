@@ -45,8 +45,7 @@ class MyLR(_LRScheduler):
     def get_lr(self):
         ret = list(self.base_lrs)
         self.base_lrs = [
-            self.start_lr * self.seq_len / self.hparams.bptt
-            for base_lr in self.base_lrs
+            self.start_lr * self.seq_len / self.hparams.bptt for _ in self.base_lrs
         ]
         return ret
 
@@ -90,7 +89,7 @@ class DARTSRNNTrial(PyTorchTrial):
             genotype=genotype,
         ))
         total_params = sum(x.data.nelement() for x in self.model.parameters())
-        logging.info("Model total parameters: {}".format(total_params))
+        logging.info(f"Model total parameters: {total_params}")
 
         # Define the optimizer
         self._optimizer = self.context.wrap_optimizer(HybridSGD(
@@ -144,8 +143,8 @@ class DARTSRNNTrial(PyTorchTrial):
         # from the hyperparameter settings.
         cell_config = []
         for node in range(8):
-            edge_ind = self.hparams["node{}_edge".format(node + 1)]
-            edge_op = self.hparams["node{}_op".format(node + 1)]
+            edge_ind = self.hparams[f"node{node + 1}_edge"]
+            edge_op = self.hparams[f"node{node + 1}_op"]
             cell_config.append((edge_op, edge_ind))
         return Genotype(recurrent=cell_config, concat=range(1, 9))
 
@@ -157,10 +156,13 @@ class DARTSRNNTrial(PyTorchTrial):
         self.myLR.step()
 
     def switch_optimizer(self):
-        if len(self._eval_history) > self.hparams.nonmono + 1:
-            if self._last_loss > min(self._eval_history[: -(self.hparams.nonmono + 1)]):
-                logging.info("Switching to ASGD.")
-                self._optimizer.set_optim("ASGD")
+        if len(
+            self._eval_history
+        ) > self.hparams.nonmono + 1 and self._last_loss > min(
+            self._eval_history[: -(self.hparams.nonmono + 1)]
+        ):
+            logging.info("Switching to ASGD.")
+            self._optimizer.set_optim("ASGD")
 
     def train_batch(self, batch: Any, epoch_idx: int, batch_idx: int) -> Dict[str, torch.Tensor]:
         """
@@ -168,7 +170,7 @@ class DARTSRNNTrial(PyTorchTrial):
         Returns: Dictionary of the calculated Metrics
         """
         if epoch_idx != self._last_epoch:
-            logging.info("Starting epoch {}".format(epoch_idx))
+            logging.info(f"Starting epoch {epoch_idx}")
             if (
                 epoch_idx > self.hparams["optimizer_switch_epoch"]
                 and self._optimizer.optim_name == "SGD"

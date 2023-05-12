@@ -3,10 +3,7 @@ from typing import Any, Dict, Type
 
 class InternalException(Exception):
     def __init__(self, message: str) -> None:
-        self.message = (
-            "Internal error: {}. Please reach out to the "
-            "Determined AI team for help.".format(message)
-        )
+        self.message = f"Internal error: {message}. Please reach out to the Determined AI team for help."
 
     def __str__(self) -> str:
         return self.message

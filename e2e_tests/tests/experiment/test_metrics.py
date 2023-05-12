@@ -86,7 +86,7 @@ def test_hp_importance_api() -> None:
 def request_metric_names(experiment_id):  # type: ignore
     response = api.get(
         conf.make_master_url(),
-        "api/v1/experiments/{}/metrics-stream/metric-names".format(experiment_id),
+        f"api/v1/experiments/{experiment_id}/metrics-stream/metric-names",
         params={"period_seconds": 1},
     )
     results = [message["result"] for message in map(json.loads, response.text.splitlines())]
@@ -122,8 +122,12 @@ def request_metric_names(experiment_id):  # type: ignore
 def request_train_metric_batches(experiment_id):  # type: ignore
     response = api.get(
         conf.make_master_url(),
-        "api/v1/experiments/{}/metrics-stream/batches".format(experiment_id),
-        params={"metric_name": "loss", "metric_type": "METRIC_TYPE_TRAINING", "period_seconds": 1},
+        f"api/v1/experiments/{experiment_id}/metrics-stream/batches",
+        params={
+            "metric_name": "loss",
+            "metric_type": "METRIC_TYPE_TRAINING",
+            "period_seconds": 1,
+        },
     )
     results = [message["result"] for message in map(json.loads, response.text.splitlines())]
 
@@ -146,7 +150,7 @@ def request_train_metric_batches(experiment_id):  # type: ignore
 def request_valid_metric_batches(experiment_id):  # type: ignore
     response = api.get(
         conf.make_master_url(),
-        "api/v1/experiments/{}/metrics-stream/batches".format(experiment_id),
+        f"api/v1/experiments/{experiment_id}/metrics-stream/batches",
         params={
             "metric_name": "accuracy",
             "metric_type": "METRIC_TYPE_VALIDATION",
@@ -174,17 +178,21 @@ def request_valid_metric_batches(experiment_id):  # type: ignore
 def validate_hparam_types(hparams: dict) -> Union[None, str]:
     for hparam in ["dropout1", "dropout2", "learning_rate"]:
         if type(hparams[hparam]) != float:
-            return "hparam %s of unexpected type" % hparam
-    for hparam in ["global_batch_size", "n_filters1", "n_filters2"]:
-        if type(hparams[hparam]) != int:
-            return "hparam %s of unexpected type" % hparam
-    return None
+            return f"hparam {hparam} of unexpected type"
+    return next(
+        (
+            f"hparam {hparam} of unexpected type"
+            for hparam in ["global_batch_size", "n_filters1", "n_filters2"]
+            if type(hparams[hparam]) != int
+        ),
+        None,
+    )
 
 
 def request_train_trials_snapshot(experiment_id):  # type: ignore
     response = api.get(
         conf.make_master_url(),
-        "api/v1/experiments/{}/metrics-stream/trials-snapshot".format(experiment_id),
+        f"api/v1/experiments/{experiment_id}/metrics-stream/trials-snapshot",
         params={
             "metric_name": "loss",
             "metric_type": "METRIC_TYPE_TRAINING",
@@ -214,7 +222,7 @@ def request_train_trials_snapshot(experiment_id):  # type: ignore
 def request_valid_trials_snapshot(experiment_id):  # type: ignore
     response = api.get(
         conf.make_master_url(),
-        "api/v1/experiments/{}/metrics-stream/trials-snapshot".format(experiment_id),
+        f"api/v1/experiments/{experiment_id}/metrics-stream/trials-snapshot",
         params={
             "metric_name": "accuracy",
             "metric_type": "METRIC_TYPE_VALIDATION",
@@ -267,9 +275,8 @@ def check_trials_sample_result(results: list) -> Union[None, tuple]:
                 hparam_error = validate_hparam_types(trial["hparams"])
                 if hparam_error is not None:
                     return (hparam_error, results)
-            else:
-                if trial["hparams"] is not None:
-                    return ("hparams repeated for trial", results)
+            elif trial["hparams"] is not None:
+                return ("hparams repeated for trial", results)
             for point in trial["data"]:
                 if point["batches"] > datapoints[trial["trialId"]]:
                     datapoints[trial["trialId"]] = point["batches"]
@@ -281,7 +288,7 @@ def check_trials_sample_result(results: list) -> Union[None, tuple]:
 def request_train_trials_sample(experiment_id):  # type: ignore
     response = api.get(
         conf.make_master_url(),
-        "api/v1/experiments/{}/metrics-stream/trials-sample".format(experiment_id),
+        f"api/v1/experiments/{experiment_id}/metrics-stream/trials-sample",
         params={
             "metric_name": "loss",
             "metric_type": "METRIC_TYPE_TRAINING",
@@ -295,7 +302,7 @@ def request_train_trials_sample(experiment_id):  # type: ignore
 def request_valid_trials_sample(experiment_id):  # type: ignore
     response = api.get(
         conf.make_master_url(),
-        "api/v1/experiments/{}/metrics-stream/trials-sample".format(experiment_id),
+        f"api/v1/experiments/{experiment_id}/metrics-stream/trials-sample",
         params={
             "metric_name": "accuracy",
             "metric_type": "METRIC_TYPE_VALIDATION",
@@ -325,11 +332,11 @@ def request_hp_importance(experiment_id):  # type: ignore
     searcherMetric = lastResult["validationMetrics"]["validation_loss"]
 
     for metric in [loss, searcherMetric]:
-        if not metric["error"] == "":
+        if metric["error"] != "":
             return ("Unexpected error in HP importance", lastResult)
         if metric["pending"] or metric["inProgress"]:
             return ("Unexpected incomplete status in HP importance", lastResult)
-        if not metric["experimentProgress"] == 1:
+        if metric["experimentProgress"] != 1:
             return ("HP importance from unfinished experiment included!", lastResult)
         for hparam in [
             "dropout1",
@@ -339,7 +346,7 @@ def request_hp_importance(experiment_id):  # type: ignore
             "n_filters2",
         ]:
             if hparam not in metric["hpImportance"]:
-                return ("Missing hparams %s" % hparam, lastResult)
+                return f"Missing hparams {hparam}", lastResult
             if not valid_importance(metric["hpImportance"][hparam]):
-                return ("Unexpected importance for hparam %s" % hparam, lastResult)
+                return f"Unexpected importance for hparam {hparam}", lastResult
     return None

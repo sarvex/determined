@@ -12,7 +12,7 @@ DEFAULT_TIMEOUT = 100
 
 
 def _make_master_url(master_host: str, master_port: int, suffix: str = "") -> str:
-    return "http://{}:{}/{}".format(master_host, master_port, suffix)
+    return f"http://{master_host}:{master_port}/{suffix}"
 
 
 def wait_for_master(

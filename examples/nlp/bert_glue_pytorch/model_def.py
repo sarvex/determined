@@ -58,13 +58,17 @@ class BertPytorch(PyTorchTrial):
         optimizer_grouped_parameters = [
             {
                 "params": [
-                    p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)
+                    p
+                    for n, p in self.model.named_parameters()
+                    if all(nd not in n for nd in no_decay)
                 ],
                 "weight_decay": self.context.get_hparam("weight_decay"),
             },
             {
                 "params": [
-                    p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)
+                    p
+                    for n, p in self.model.named_parameters()
+                    if any(nd in n for nd in no_decay)
                 ],
                 "weight_decay": 0.0,
             },
@@ -171,5 +175,4 @@ class BertPytorch(PyTorchTrial):
                 batch[2] if self.context.get_hparam("model_type") in ["bert", "xlnet"] else None
             )
         outputs = self.model(**inputs)
-        results = self.get_metrics(outputs, inputs)
-        return results
+        return self.get_metrics(outputs, inputs)

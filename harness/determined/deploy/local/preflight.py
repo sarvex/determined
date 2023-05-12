@@ -29,7 +29,7 @@ def check_docker_install() -> None:
     try:
         docker.from_env()
     except docker.errors.DockerException as ex:
-        print(colored("Failed to connect to Docker daemon: %s" % ex, "red"))
+        print(colored(f"Failed to connect to Docker daemon: {ex}", "red"))
         print(
             colored(
                 "Please ensure that the Docker daemon is running "

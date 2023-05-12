@@ -738,12 +738,9 @@ class TFKerasTrialController(det.LoopTrialController):
             metrics_values = (metrics_values,)
 
         if use_model_metrics:
-            metrics = make_logs(self.model, {}, metrics_values, ModeKeys.TEST, prefix="val_")
-        else:
-            check.is_instance(metrics_values, dict)
-            metrics = {f"val_{k}": v for k, v in metrics_values.items()}
-
-        return metrics
+            return make_logs(self.model, {}, metrics_values, ModeKeys.TEST, prefix="val_")
+        check.is_instance(metrics_values, dict)
+        return {f"val_{k}": v for k, v in metrics_values.items()}
 
     def _control_loop(self) -> None:
         for wkld, args, response_func in self.workloads:
@@ -767,9 +764,7 @@ class TFKerasTrialController(det.LoopTrialController):
                         )
                     )
                 except det.InvalidHP as e:
-                    logging.info(
-                        "Invalid hyperparameter exception in trial validation step: {}".format(e)
-                    )
+                    logging.info(f"Invalid hyperparameter exception in trial validation step: {e}")
                     response_func(
                         util.wrap_metrics(
                             {},

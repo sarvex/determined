@@ -7,8 +7,7 @@ from typing import Any, Callable, List, NamedTuple, Optional, Tuple, cast
 def make_prefixes(desc: str) -> List[str]:
     parts = desc.split("|")
     ret = [parts[0]]
-    for part in parts[1:]:
-        ret.append(ret[-1] + part)
+    ret.extend(ret[-1] + part for part in parts[1:])
     return ret
 
 
@@ -140,12 +139,7 @@ def add_args(parser: ArgumentParser, description: List[Any], depth: int = 0) -> 
     help_parser = None
 
     def description_sort_key(desc: Any) -> str:
-        if isinstance(desc, Cmd):
-            return desc.name
-
-        # `sorted` is stable, so we shouldn't change the relative
-        # positioning of non-Cmd arg descriptions.
-        return ""
+        return desc.name if isinstance(desc, Cmd) else ""
 
     # Sort descriptions alphabetically by name before passing them to
     # argparse. This ensures that `help` output is sorted

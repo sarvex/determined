@@ -20,11 +20,11 @@ def download_file(url, output_dir):
 
 async def download_and_extract_url(zipurl, outdir):
     filename = download_file(zipurl, outdir)
-    with open(filename, "rb") as f, NamedTemporaryFile() as tfile:
+    with (open(filename, "rb") as f, NamedTemporaryFile() as tfile):
         tfile.write(f.read())
         tfile.seek(0)
         unpack_archive(tfile.name, outdir, format="zip")
-        print("finished extracting: {}".format(zipurl))
+        print(f"finished extracting: {zipurl}")
     await asyncio.sleep(1)
 
 

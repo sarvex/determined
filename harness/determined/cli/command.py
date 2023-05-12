@@ -123,7 +123,7 @@ Command = namedtuple(
 @authentication.required
 def list(args: Namespace) -> None:
     api_path = RemoteTaskNewAPIs[args._command]
-    api_full_path = "api/v1/{}".format(api_path)
+    api_full_path = f"api/v1/{api_path}"
     table_header = RemoteTaskListTableHeaders[args._command]
 
     if args.all:
@@ -151,33 +151,28 @@ def kill(args: Namespace) -> None:
 
     for i, id in enumerate(ids):
         try:
-            api_full_path = "api/v1/{}/{}/kill".format(RemoteTaskNewAPIs[args._command], id)
+            api_full_path = f"api/v1/{RemoteTaskNewAPIs[args._command]}/{id}/kill"
             api.post(args.master, api_full_path)
-            print(colored("Killed {} {}".format(name, id), "green"))
+            print(colored(f"Killed {name} {id}", "green"))
         except api.errors.APIException as e:
             if not args.force:
                 for ignored in ids[i + 1 :]:
-                    print("Cowardly not killing {}".format(ignored))
+                    print(f"Cowardly not killing {ignored}")
                 raise e
-            print(colored("Skipping: {} ({})".format(e, type(e).__name__), "red"))
+            print(colored(f"Skipping: {e} ({type(e).__name__})", "red"))
 
 
 @authentication.required
 def config(args: Namespace) -> None:
     name = RemoteTaskName[args._command]
-    api_full_path = "api/v1/{}/{}".format(RemoteTaskNewAPIs[args._command], args.id)
+    api_full_path = f"api/v1/{RemoteTaskNewAPIs[args._command]}/{args.id}"
     res_json = api.get(args.master, api_full_path).json()[name]
     print(render.format_object_as_yaml(res_json["config"]))
 
 
 @authentication.required
 def tail_logs(args: Namespace) -> None:
-    api_full_path = "{}/{}/events?follow={}&tail={}".format(
-        RemoteTaskOldAPIs[args._command],
-        RemoteTaskGetIDsFunc[args._command](args),  # type: ignore
-        args.follow,
-        args.tail,
-    )
+    api_full_path = f"{RemoteTaskOldAPIs[args._command]}/{RemoteTaskGetIDsFunc[args._command](args)}/events?follow={args.follow}&tail={args.tail}"
     with api.ws(args.master, api_full_path) as ws:
         for msg in ws:
             render_event_stream(msg)
@@ -205,8 +200,7 @@ def parse_config(
     for config_arg in overrides:
         if "=" not in config_arg:
             raise ValueError(
-                "Could not read configuration option '{}'\n\n"
-                "Expecting:\n{}".format(config_arg, CONFIG_DESC)
+                f"Could not read configuration option '{config_arg}'\n\nExpecting:\n{CONFIG_DESC}"
             )
 
         key, value = config_arg.split("=", maxsplit=1)  # type: Tuple[str, Any]
@@ -230,8 +224,7 @@ def parse_config(
     for volume_arg in volumes:
         if ":" not in volume_arg:
             raise ValueError(
-                "Could not read volume option '{}'\n\n"
-                "Expecting:\n{}".format(volume_arg, VOLUME_DESC)
+                f"Could not read volume option '{volume_arg}'\n\nExpecting:\n{VOLUME_DESC}"
             )
 
         host_path, container_path = volume_arg.split(":", maxsplit=1)
@@ -286,22 +279,24 @@ def render_event_stream(event: Any) -> None:
     description = event["snapshot"]["config"]["description"]
     if event["scheduled_event"] is not None:
         print(
-            colored("Scheduling {} (id: {})...".format(description, event["parent_id"]), "yellow")
+            colored(
+                f'Scheduling {description} (id: {event["parent_id"]})...',
+                "yellow",
+            )
         )
     elif event["assigned_event"] is not None:
-        print(colored("{} was assigned to an agent...".format(description), "green"))
+        print(colored(f"{description} was assigned to an agent...", "green"))
     elif event["container_started_event"] is not None:
-        print(colored("Container of {} has started...".format(description), "green"))
+        print(colored(f"Container of {description} has started...", "green"))
     elif event["service_ready_event"] is not None:
         pass  # Ignore this message.
     elif event["terminate_request_event"] is not None:
-        print(colored("{} was requested to terminate...".format(description), "red"))
+        print(colored(f"{description} was requested to terminate...", "red"))
     elif event["exited_event"] is not None:
         # TODO: Non-success exit statuses should be red
         stat = event["exited_event"]
-        print(colored("{} was terminated: {}".format(description, stat), "green"))
-        pass
+        print(colored(f"{description} was terminated: {stat}", "green"))
     elif event["log_event"] is not None:
         print(event["log_event"], flush=True)
     else:
-        raise ValueError("unexpected event: {}".format(event))
+        raise ValueError(f"unexpected event: {event}")

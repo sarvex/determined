@@ -137,7 +137,7 @@ class CallbackTrialController(TrialController):
                     self.terminate()
                     response = workload.Skipped()
                 else:
-                    raise AssertionError("Unexpected workload: {}".format(w.kind))
+                    raise AssertionError(f"Unexpected workload: {w.kind}")
 
             except det.errors.SkipWorkloadException:
                 response = workload.Skipped()

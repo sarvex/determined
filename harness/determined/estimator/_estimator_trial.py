@@ -299,9 +299,7 @@ class DeterminedControlHook(estimator.RunHook):
                         )
                     )
                 except det.InvalidHP as e:
-                    logging.info(
-                        "Invalid hyperparameter exception in trial validation step: {}".format(e)
-                    )
+                    logging.info(f"Invalid hyperparameter exception in trial validation step: {e}")
                     response_func(
                         det.util.wrap_metrics(
                             {},
@@ -330,7 +328,7 @@ class DeterminedControlHook(estimator.RunHook):
     def load_rng_state_from_checkpoint(self, checkpoint_dir: str) -> None:
         rng_state = None
         try:
-            with open(checkpoint_dir + "/rng_state.pkl", "rb") as f:
+            with open(f"{checkpoint_dir}/rng_state.pkl", "rb") as f:
                 rng_state = pickle.load(f)
         except IOError:
             # backward compatibility: this is expected if it's a checkpoint
@@ -345,7 +343,7 @@ class DeterminedControlHook(estimator.RunHook):
     def save_rng_state_with_checkpoint(self, checkpoint_dir: str) -> None:
         rng_state = get_rng_state()
 
-        with open(checkpoint_dir + "/rng_state.pkl", "wb") as f:
+        with open(f"{checkpoint_dir}/rng_state.pkl", "wb") as f:
             pickle.dump(rng_state, f)
 
 
@@ -743,10 +741,7 @@ class EstimatorTrialController(det.LoopTrialController):
         # Reset the per-evaluation set of allgather ops in the context.
         self.context._reset_allgather_ops()
 
-        if not self.is_chief:
-            return workload.Skipped()
-
-        return {"validation_metrics": metrics}
+        return {"validation_metrics": metrics} if self.is_chief else workload.Skipped()
 
     def average_metrics(self, metrics: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         check.true(self.hvd_config.use)

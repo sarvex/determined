@@ -16,8 +16,6 @@ try:
 except ImportError:
     if torch.cuda.is_available():
         logging.warning("Failed to import apex.")
-    pass
-
 # AMP is only available in PyTorch 1.6+
 try:
     import torch.cuda.amp as amp
@@ -27,7 +25,6 @@ except ImportError:
     amp_import_error = True
     if torch.cuda.is_available():
         logging.warning("PyTorch AMP is unavailable.")
-    pass
 
 
 class PyTorchTrialContext(det.TrialContext, pytorch._PyTorchReducerContext):
@@ -223,24 +220,26 @@ class PyTorchTrialContext(det.TrialContext, pytorch._PyTorchReducerContext):
         The LR scheduler must use an optimizer wrapped by :meth:`wrap_optimizer`.  If ``apex.amp``
         is in use, the optimizer must also have been configured with :meth:`configure_apex_amp`.
         """
-        if isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
-            if step_mode != pytorch.LRScheduler.StepMode.MANUAL_STEP:
-                raise det.errors.InvalidExperimentException(
-                    "detected that context.wrap_lr_scheduler() was called with an instance of "
-                    "torch.optim.lr_scheduer.ReduceLROnPlateau as the lr_scheduler.  This lr "
-                    "scheduler class does not have the usual step() parameters, and so it can "
-                    "only be used with step_mode=MANUAL_STEP.\n"
-                    "\n"
-                    "For example, if you wanted to step it on every validation step, you might "
-                    "wrap your lr_scheduler and pass it to a callback like this:\n"
-                    "\n"
-                    "class MyLRStepper(PyTorchCallback):\n"
-                    "    def __init__(self, wrapped_lr_scheduler):\n"
-                    "        self.wrapped_lr_scheduler = wrapped_lr_scheduler\n"
-                    "\n"
-                    "    def on_validation_end(self, metrics):\n"
-                    '        self.wrapped_lr_scheduler.step(metrics["validation_error"])\n'
-                )
+        if (
+            isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau)
+            and step_mode != pytorch.LRScheduler.StepMode.MANUAL_STEP
+        ):
+            raise det.errors.InvalidExperimentException(
+                "detected that context.wrap_lr_scheduler() was called with an instance of "
+                "torch.optim.lr_scheduer.ReduceLROnPlateau as the lr_scheduler.  This lr "
+                "scheduler class does not have the usual step() parameters, and so it can "
+                "only be used with step_mode=MANUAL_STEP.\n"
+                "\n"
+                "For example, if you wanted to step it on every validation step, you might "
+                "wrap your lr_scheduler and pass it to a callback like this:\n"
+                "\n"
+                "class MyLRStepper(PyTorchCallback):\n"
+                "    def __init__(self, wrapped_lr_scheduler):\n"
+                "        self.wrapped_lr_scheduler = wrapped_lr_scheduler\n"
+                "\n"
+                "    def on_validation_end(self, metrics):\n"
+                '        self.wrapped_lr_scheduler.step(metrics["validation_error"])\n'
+            )
 
         opt = getattr(lr_scheduler, "optimizer", None)
         if opt is not None:
@@ -278,18 +277,15 @@ class PyTorchTrialContext(det.TrialContext, pytorch._PyTorchReducerContext):
 
     def _init_device(self) -> None:
         self.n_gpus = len(self.env.container_gpus)
-        if self.hvd_config.use:
-            if self.n_gpus > 0:
-                # We launch a horovod process per GPU. Each process
-                # needs to bind to a unique GPU.
-                self.device = torch.device("cuda", hvd.local_rank())
-                torch.cuda.set_device(self.device)
-            else:
-                self.device = torch.device("cpu")
-        elif self.n_gpus > 0:
-            self.device = torch.device("cuda", 0)
-        else:
+        if self.hvd_config.use and self.n_gpus > 0:
+            # We launch a horovod process per GPU. Each process
+            # needs to bind to a unique GPU.
+            self.device = torch.device("cuda", hvd.local_rank())
+            torch.cuda.set_device(self.device)
+        elif self.hvd_config.use or self.n_gpus <= 0:
             self.device = torch.device("cpu")
+        else:
+            self.device = torch.device("cuda", 0)
         check.is_not_none(self.device)
 
     def to_device(self, data: pytorch._Data) -> pytorch.TorchData:

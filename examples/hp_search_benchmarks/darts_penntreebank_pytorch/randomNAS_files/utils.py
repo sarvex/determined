@@ -33,7 +33,7 @@ def create_exp_dir(path, scripts_to_save=None):
     if not os.path.exists(path):
         os.mkdir(path)
 
-    print("Experiment dir : {}".format(path))
+    print(f"Experiment dir : {path}")
     if scripts_to_save is not None:
         os.mkdir(os.path.join(path, "scripts"))
         for script in scripts_to_save:
@@ -67,7 +67,7 @@ def embedded_dropout(embed, words, dropout=0.1, scale=None):
     if padding_idx is None:
         padding_idx = -1
 
-    X = F.embedding(
+    return F.embedding(
         words,
         masked_embed_weight,
         padding_idx,
@@ -76,7 +76,6 @@ def embedded_dropout(embed, words, dropout=0.1, scale=None):
         embed.scale_grad_by_freq,
         embed.sparse,
     )
-    return X
 
 
 class LockedDropout(nn.Module):

@@ -52,13 +52,12 @@ def deploy_gcp(command: str, args: argparse.Namespace) -> None:
     env = os.environ.copy()
     env["TF_DATA_DIR"] = os.path.join(args.local_state_path, "terraform_data")
 
-    # Initialize determined configurations.
-    det_configs = {}
     args_dict = vars(args)
-    for arg in args_dict:
-        if args_dict[arg] is not None:
-            det_configs[arg] = args_dict[arg]
-
+    det_configs = {
+        arg: args_dict[arg]
+        for arg, value in args_dict.items()
+        if value is not None
+    }
     # Handle down subcommand.
     if command == "down":
         gcp.delete(det_configs, env, args.no_prompt)

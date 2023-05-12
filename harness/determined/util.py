@@ -47,16 +47,12 @@ def has_param(fn: Callable[..., Any], name: str, pos: Optional[int] = None) -> b
     args = inspect.getfullargspec(fn)[0]
     if name in args:
         return True
-    if pos is not None:
-        return pos < len(args)
-    return False
+    return pos < len(args) if pos is not None else False
 
 
 def get_member_func(obj: Any, func_name: str) -> Any:
     member = getattr(obj, func_name, None)
-    if callable(member):
-        return member
-    return None
+    return member if callable(member) else None
 
 
 def _list_to_dict(list_of_dicts: List[Dict[str, Any]]) -> Dict[str, List[Any]]:
@@ -83,7 +79,7 @@ def _dict_to_list(dict_of_lists: Dict[str, List]) -> List[Dict[str, Any]]:
 
     output_list = [{} for _ in range(list_len)]  # type: List[Dict[str, Any]]
     for i in range(list_len):
-        for k in dict_of_lists.keys():
+        for k in dict_of_lists:
             output_list[i][k] = dict_of_lists[k][i]
 
     return output_list
@@ -99,7 +95,11 @@ def validate_batch_metrics(batch_metrics: List[Dict[str, Any]]) -> None:
         if metric_dict_keys == keys:
             continue
 
-        check.eq(metric_dict_keys, keys, "inconsistent training metrics: index: {}".format(idx))
+        check.eq(
+            metric_dict_keys,
+            keys,
+            f"inconsistent training metrics: index: {idx}",
+        )
 
 
 def make_metrics(num_inputs: Optional[int], batch_metrics: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -195,10 +195,7 @@ def write_user_code(path: pathlib.Path, on_cluster: bool) -> None:
     # since it is rather common that users mount large, non-model files into their working directory
     # (like data or their entire HOME directory), when we are training on-cluster we use a
     # specially-prepared clean copy of the model rather than the working directory.
-    if on_cluster:
-        model_dir = constants.MANAGED_TRAINING_MODEL_COPY
-    else:
-        model_dir = "."
+    model_dir = constants.MANAGED_TRAINING_MODEL_COPY if on_cluster else "."
     shutil.copytree(model_dir, code_path, ignore=shutil.ignore_patterns("__pycache__"))
     os.chmod(code_path, 0o755)
 

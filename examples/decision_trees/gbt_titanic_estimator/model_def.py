@@ -44,7 +44,7 @@ class BoostedTreesTrial(EstimatorTrial):
         # Since data fits into memory, use entire dataset per layer.
         n_batches = 1
 
-        est = tf.estimator.BoostedTreesClassifier(
+        return tf.estimator.BoostedTreesClassifier(
             self.feature_columns,
             n_batches_per_layer=n_batches,
             n_trees=self.n_trees,
@@ -54,8 +54,6 @@ class BoostedTreesTrial(EstimatorTrial):
             l2_regularization=self.l2_regularization,
             min_node_weight=self.min_node_weight,
         )
-
-        return est
 
     def make_input_fn(self, X, y, shuffle=True):
         def input_fn():

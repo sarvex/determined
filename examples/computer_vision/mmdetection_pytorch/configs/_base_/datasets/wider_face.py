@@ -49,22 +49,22 @@ data = dict(
         times=2,
         dataset=dict(
             type=dataset_type,
-            ann_file=data_root + "train.txt",
-            img_prefix=data_root + "WIDER_train/",
+            ann_file=f"{data_root}train.txt",
+            img_prefix=f"{data_root}WIDER_train/",
             min_size=17,
             pipeline=train_pipeline,
         ),
     ),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + "val.txt",
-        img_prefix=data_root + "WIDER_val/",
+        ann_file=f"{data_root}val.txt",
+        img_prefix=f"{data_root}WIDER_val/",
         pipeline=test_pipeline,
     ),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + "val.txt",
-        img_prefix=data_root + "WIDER_val/",
+        ann_file=f"{data_root}val.txt",
+        img_prefix=f"{data_root}WIDER_val/",
         pipeline=test_pipeline,
     ),
 )

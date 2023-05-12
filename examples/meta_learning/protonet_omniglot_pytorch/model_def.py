@@ -87,15 +87,16 @@ class OmniglotProtoNetTrial(PyTorchTrial):
         )
 
     def get_train_valid_splits(self):
-        n_classes = 0
-        for root, dirs, files in os.walk(self.data_config["data_path"]):
-            if len(dirs) == 0:
-                n_classes += 1
+        n_classes = sum(
+            1
+            for root, dirs, files in os.walk(self.data_config["data_path"])
+            if len(dirs) == 0
+        )
         idxs = np.arange(n_classes)
-        print("num classes in dataset: {}".format(n_classes))
+        print(f"num classes in dataset: {n_classes}")
         np.random.shuffle(idxs)
         n_val_classes = int(n_classes * self.data_config["validation_portion"])
-        self.val_class_idxs = idxs[0:n_val_classes]
+        self.val_class_idxs = idxs[:n_val_classes]
         self.train_class_idxs = idxs[n_val_classes:]
 
     def build_training_data_loader(self) -> DataLoader:
@@ -158,8 +159,9 @@ class OmniglotProtoNetTrial(PyTorchTrial):
         # Now we can reshape to get prototype embeddings
         # Prototype size: (num_classes, embedding_dim)
         prototypes = (
-            embedding[0 : num_classes * num_support]
-            .contiguous().view(num_classes, num_support, embedding_dim)
+            embedding[: num_classes * num_support]
+            .contiguous()
+            .view(num_classes, num_support, embedding_dim)
             .mean(1)
         )
 

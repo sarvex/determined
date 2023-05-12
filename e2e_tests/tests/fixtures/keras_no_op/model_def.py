@@ -30,7 +30,7 @@ class NumPyRandomMetric(tf.keras.metrics.Metric):
 
 
 class TensorFlowRandomMetric(tf.keras.metrics.Metric):
-    def update_state(*args, **kargs):
+    def update_state(self, **kargs):
         pass
 
     def result(self):

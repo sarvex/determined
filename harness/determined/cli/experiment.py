@@ -34,19 +34,19 @@ def patch_experiment(args: Namespace, verb: str, patch_doc: Dict[str, Any]) -> N
 @authentication.required
 def activate(args: Namespace) -> None:
     api.activate_experiment(args.master, args.experiment_id)
-    print("Activated experiment {}".format(args.experiment_id))
+    print(f"Activated experiment {args.experiment_id}")
 
 
 @authentication.required
 def archive(args: Namespace) -> None:
     patch_experiment(args, "archive", {"archived": True})
-    print("Archived experiment {}".format(args.experiment_id))
+    print(f"Archived experiment {args.experiment_id}")
 
 
 @authentication.required
 def cancel(args: Namespace) -> None:
     patch_experiment(args, "cancel", {"state": "STOPPING_CANCELED"})
-    print("Canceled experiment {}".format(args.experiment_id))
+    print(f"Canceled experiment {args.experiment_id}")
 
 
 def read_git_metadata(model_def_path: pathlib.Path) -> Tuple[str, str, str, str]:
@@ -57,7 +57,7 @@ def read_git_metadata(model_def_path: pathlib.Path) -> Tuple[str, str, str, str]
     try:
         from git import Repo
     except ImportError as e:
-        print("Error: Please verify that git is installed correctly: {}".format(e))
+        print(f"Error: Please verify that git is installed correctly: {e}")
         sys.exit(1)
 
     if model_def_path.is_dir():
@@ -67,16 +67,14 @@ def read_git_metadata(model_def_path: pathlib.Path) -> Tuple[str, str, str, str]
 
     if not repo_path.joinpath(".git").is_dir():
         print(
-            "Error: No git directory found at {}. Please "
-            "initialize a git repository or refrain from "
-            "using the --git feature.".format(repo_path)
+            f"Error: No git directory found at {repo_path}. Please initialize a git repository or refrain from using the --git feature."
         )
         sys.exit(1)
 
     try:
         repo = Repo(str(repo_path))
     except Exception as e:
-        print("Failed to initialize git repository at ", "{}: {}".format(repo_path, e))
+        print("Failed to initialize git repository at ", f"{repo_path}: {e}")
         sys.exit(1)
 
     if repo.is_dirty():
@@ -90,7 +88,7 @@ def read_git_metadata(model_def_path: pathlib.Path) -> Tuple[str, str, str, str]
 
     commit = repo.commit()
     commit_hash = commit.hexsha
-    committer = "{} <{}>".format(commit.committer.name, commit.committer.email)
+    committer = f"{commit.committer.name} <{commit.committer.email}>"
     commit_date = commit.committed_datetime.isoformat()
 
     # To get the upstream remote URL:
@@ -102,8 +100,10 @@ def read_git_metadata(model_def_path: pathlib.Path) -> Tuple[str, str, str, str]
     try:
         upstream_branch = repo.git.rev_parse("@{u}", abbrev_ref=True, symbolic_full_name=True)
         remote_name = upstream_branch.split("/", 1)[0]
-        remote_url = repo.git.config("remote.{}.url".format(remote_name), get=True)
-        print("Using remote URL '{}' from upstream branch '{}'".format(remote_url, upstream_branch))
+        remote_url = repo.git.config(f"remote.{remote_name}.url", get=True)
+        print(
+            f"Using remote URL '{remote_url}' from upstream branch '{upstream_branch}'"
+        )
     except Exception as e:
         print("Failed to find the upstream branch: ", e)
         sys.exit(1)
@@ -116,7 +116,7 @@ def _parse_config_file_or_exit(config_file: io.FileIO) -> Dict:
 
     config_file.close()
     if not experiment_config or not isinstance(experiment_config, dict):
-        print("Error: invalid experiment config file {}".format(config_file.name))
+        print(f"Error: invalid experiment config file {config_file.name}")
         sys.exit(1)
     return experiment_config
 
@@ -195,8 +195,8 @@ def delete_experiment(args: Namespace) -> None:
         "alternative, see the 'det archive' command. Do you still \n"
         "wish to proceed?"
     ):
-        api.delete(args.master, "/api/v1/experiments/{}".format(args.experiment_id))
-        print("Successfully deleted experiment {}".format(args.experiment_id))
+        api.delete(args.master, f"/api/v1/experiments/{args.experiment_id}")
+        print(f"Successfully deleted experiment {args.experiment_id}")
     else:
         print("Aborting experiment deletion.")
 
@@ -206,9 +206,9 @@ def describe(args: Namespace) -> None:
     docs = []
     for experiment_id in args.experiment_ids.split(","):
         if args.metrics:
-            r = api.get(args.master, "experiments/{}/metrics/summary".format(experiment_id))
+            r = api.get(args.master, f"experiments/{experiment_id}/metrics/summary")
         else:
-            r = api.get(args.master, "experiments/{}".format(experiment_id))
+            r = api.get(args.master, f"experiments/{experiment_id}")
         docs.append(r.json())
 
     if args.json:
@@ -275,10 +275,10 @@ def describe(args: Namespace) -> None:
     if args.metrics:
         # Accumulate the scalar training and validation metric names from all provided experiments.
         t_metrics_names = sorted({n for doc in docs for n in scalar_training_metrics_names(doc)})
-        t_metrics_headers = ["Training Metric: {}".format(name) for name in t_metrics_names]
+        t_metrics_headers = [f"Training Metric: {name}" for name in t_metrics_names]
 
         v_metrics_names = sorted({n for doc in docs for n in scalar_validation_metrics_names(doc)})
-        v_metrics_headers = ["Validation Metric: {}".format(name) for name in v_metrics_names]
+        v_metrics_headers = [f"Validation Metric: {name}" for name in v_metrics_names]
     else:
         t_metrics_headers = []
         v_metrics_headers = []
@@ -310,8 +310,7 @@ def describe(args: Namespace) -> None:
                         else:
                             t_metrics_fields.append(None)
 
-                checkpoint = step.get("checkpoint")
-                if checkpoint:
+                if checkpoint := step.get("checkpoint"):
                     checkpoint_state = checkpoint["state"]
                     checkpoint_start_time = checkpoint.get("start_time")
                     checkpoint_end_time = checkpoint.get("end_time")
@@ -369,21 +368,20 @@ def describe(args: Namespace) -> None:
 
 @authentication.required
 def config(args: Namespace) -> None:
-    result = api.get(args.master, "experiments/{}/config".format(args.experiment_id))
+    result = api.get(args.master, f"experiments/{args.experiment_id}/config")
     yaml.safe_dump(result.json(), stream=sys.stdout, default_flow_style=False)
 
 
 @authentication.required
 def download_model_def(args: Namespace) -> None:
-    resp = api.get(args.master, "experiments/{}/model_def".format(args.experiment_id))
+    resp = api.get(args.master, f"experiments/{args.experiment_id}/model_def")
     value, params = cgi.parse_header(resp.headers["Content-Disposition"])
-    if value == "attachment" and "filename" in params:
-        with args.output_dir.joinpath(params["filename"]).open("wb") as f:
-            f.write(resp.content)
-    else:
+    if value != "attachment" or "filename" not in params:
         raise api.errors.BadResponseException(
-            "Unexpected Content-Disposition header format. {}: {}".format(value, params)
+            f"Unexpected Content-Disposition header format. {value}: {params}"
         )
+    with args.output_dir.joinpath(params["filename"]).open("wb") as f:
+        f.write(resp.content)
 
 
 def download(args: Namespace) -> None:
@@ -405,17 +403,17 @@ def download(args: Namespace) -> None:
 
 @authentication.required
 def kill_experiment(args: Namespace) -> None:
-    api.post(args.master, "experiments/{}/kill".format(args.experiment_id))
-    print("Killed experiment {}".format(args.experiment_id))
+    api.post(args.master, f"experiments/{args.experiment_id}/kill")
+    print(f"Killed experiment {args.experiment_id}")
 
 
 @authentication.required
 def wait(args: Namespace) -> None:
     while True:
-        r = api.get(args.master, "experiments/{}".format(args.experiment_id)).json()
+        r = api.get(args.master, f"experiments/{args.experiment_id}").json()
 
         if r["state"] in constants.TERMINAL_STATES:
-            print("Experiment {} terminated with state {}".format(args.experiment_id, r["state"]))
+            print(f'Experiment {args.experiment_id} terminated with state {r["state"]}')
             if r["state"] == constants.COMPLETED:
                 sys.exit(0)
             else:
@@ -481,10 +479,8 @@ def scalar_training_metrics_names(exp: Dict[str, Any]) -> Set[str]:
     """
     for trial in exp["trials"]:
         for step in trial["steps"]:
-            metrics = step.get("metrics")
-            if not metrics:
-                continue
-            return set(metrics.get("avg_metrics", {}).keys())
+            if metrics := step.get("metrics"):
+                return set(metrics.get("avg_metrics", {}).keys())
 
     return set()
 
@@ -503,7 +499,7 @@ def scalar_validation_metrics_names(exp: Dict[str, Any]) -> Set[str]:
 
 @authentication.required
 def list_trials(args: Namespace) -> None:
-    r = api.get(args.master, "experiments/{}/summary".format(args.experiment_id))
+    r = api.get(args.master, f"experiments/{args.experiment_id}/summary")
     experiment = r.json()
 
     headers = ["Trial ID", "State", "H-Params", "Start Time", "End Time", "# of Batches"]
@@ -525,43 +521,47 @@ def list_trials(args: Namespace) -> None:
 @authentication.required
 def pause(args: Namespace) -> None:
     patch_experiment(args, "pause", {"state": "PAUSED"})
-    print("Paused experiment {}".format(args.experiment_id))
+    print(f"Paused experiment {args.experiment_id}")
 
 
 @authentication.required
 def set_description(args: Namespace) -> None:
     api.patch_experiment_v1(args.master, args.experiment_id, {"description": args.description})
-    print("Set description of experiment {} to '{}'".format(args.experiment_id, args.description))
+    print(
+        f"Set description of experiment {args.experiment_id} to '{args.description}'"
+    )
 
 
 @authentication.required
 def set_name(args: Namespace) -> None:
     api.patch_experiment_v1(args.master, args.experiment_id, {"name": args.name})
-    print("Set name of experiment {} to '{}'".format(args.experiment_id, args.name))
+    print(f"Set name of experiment {args.experiment_id} to '{args.name}'")
 
 
 @authentication.required
 def add_label(args: Namespace) -> None:
     patch_experiment(args, "add label to", {"labels": {args.label: True}})
-    print("Added label '{}' to experiment {}".format(args.label, args.experiment_id))
+    print(f"Added label '{args.label}' to experiment {args.experiment_id}")
 
 
 @authentication.required
 def remove_label(args: Namespace) -> None:
     patch_experiment(args, "remove label from", {"labels": {args.label: None}})
-    print("Removed label '{}' from experiment {}".format(args.label, args.experiment_id))
+    print(f"Removed label '{args.label}' from experiment {args.experiment_id}")
 
 
 @authentication.required
 def set_max_slots(args: Namespace) -> None:
     patch_experiment(args, "change `max_slots` of", {"resources": {"max_slots": args.max_slots}})
-    print("Set `max_slots` of experiment {} to {}".format(args.experiment_id, args.max_slots))
+    print(
+        f"Set `max_slots` of experiment {args.experiment_id} to {args.max_slots}"
+    )
 
 
 @authentication.required
 def set_weight(args: Namespace) -> None:
     patch_experiment(args, "change `weight` of", {"resources": {"weight": args.weight}})
-    print("Set `weight` of experiment {} to {}".format(args.experiment_id, args.weight))
+    print(f"Set `weight` of experiment {args.experiment_id} to {args.weight}")
 
 
 @authentication.required
@@ -574,7 +574,9 @@ def set_gc_policy(args: Namespace) -> None:
 
     if not args.yes:
         r = api.get(
-            args.master, "experiments/{}/preview_gc".format(args.experiment_id), params=policy
+            args.master,
+            f"experiments/{args.experiment_id}/preview_gc",
+            params=policy,
         )
         response = r.json()
         checkpoints = response["checkpoints"]
@@ -584,7 +586,7 @@ def set_gc_policy(args: Namespace) -> None:
             "Trial ID",
             "# of Batches",
             "State",
-            "Validation Metric\n({})".format(metric_name),
+            f"Validation Metric\n({metric_name})",
             "UUID",
             "Resources",
         ]
@@ -601,17 +603,14 @@ def set_gc_policy(args: Namespace) -> None:
             if "step" in c and c["step"].get("validation") is not None
         ]
 
-        if len(values) != 0:
+        if values:
             print(
                 "The following checkpoints with validation will be deleted "
                 "by applying this GC Policy:"
             )
             print(tabulate.tabulate(values, headers, tablefmt="presto"), flush=FLUSH)
         print(
-            "This policy will delete {} checkpoints with "
-            "validations and {} checkpoints without validations.".format(
-                len(values), len(checkpoints) - len(values)
-            )
+            f"This policy will delete {len(values)} checkpoints with validations and {len(checkpoints) - len(values)} checkpoints without validations."
         )
 
     if args.yes or render.yes_or_no(
@@ -621,7 +620,9 @@ def set_gc_policy(args: Namespace) -> None:
         "proceed?"
     ):
         patch_experiment(args, "change gc policy of", {"checkpoint_storage": policy})
-        print("Set GC policy of experiment {} to\n{}".format(args.experiment_id, pformat(policy)))
+        print(
+            f"Set GC policy of experiment {args.experiment_id} to\n{pformat(policy)}"
+        )
     else:
         print("Aborting operations.")
 
@@ -629,13 +630,11 @@ def set_gc_policy(args: Namespace) -> None:
 @authentication.required
 def unarchive(args: Namespace) -> None:
     patch_experiment(args, "archive", {"archived": False})
-    print("Unarchived experiment {}".format(args.experiment_id))
+    print(f"Unarchived experiment {args.experiment_id}")
 
 
 def none_or_int(string: str) -> Optional[int]:
-    if string.lower().strip() in ("null", "none"):
-        return None
-    return int(string)
+    return None if string.lower().strip() in {"null", "none"} else int(string)
 
 
 def experiment_id_completer(prefix: str, parsed_args: Namespace, **kwargs: Any) -> List[str]:

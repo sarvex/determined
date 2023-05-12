@@ -32,7 +32,7 @@ def run_command(args: Namespace) -> None:
         print(resp["id"])
         return
 
-    url = "commands/{}/events".format(resp["id"])
+    url = f'commands/{resp["id"]}/events'
 
     with api.ws(args.master, url) as ws:
         for msg in ws:

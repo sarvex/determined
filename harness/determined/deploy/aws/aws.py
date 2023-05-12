@@ -86,11 +86,9 @@ def delete(stack_name: str, boto3_session: boto3.session.Session) -> None:
         )
         print("Agents Terminated")
 
-    # Third, empty the bucket that was created for this stack.
-    bucket_name = get_output(stack_name, boto3_session).get(
+    if bucket_name := get_output(stack_name, boto3_session).get(
         constants.cloudformation.CHECKPOINT_BUCKET
-    )
-    if bucket_name:
+    ):
         print("Emptying Checkpoint Bucket")
         empty_bucket(bucket_name, boto3_session)
         print("Checkpoint Bucket Empty")
@@ -230,12 +228,14 @@ def list_stacks(boto3_session: boto3.session.Session) -> List[Dict[str, Any]]:
 
     output = []
     for stack in response["Stacks"]:
-        for tag in stack["Tags"]:
+        output.extend(
+            stack
+            for tag in stack["Tags"]
             if (
                 tag["Key"] == constants.defaults.STACK_TAG_KEY
                 and tag["Value"] == constants.defaults.STACK_TAG_VALUE
-            ):
-                output.append(stack)
+            )
+        )
     return output
 
 
@@ -268,10 +268,7 @@ def stack_uses_spot(stack_name: str, boto3_session: boto3.session.Session) -> bo
         return False
 
     spot_enabled_str_val = params[constants.cloudformation.SPOT_ENABLED]
-    if spot_enabled_str_val.lower() == "true":
-        return True
-    else:
-        return False
+    return spot_enabled_str_val.lower() == "true"
 
 
 def get_management_tag_key_value(stack_name: str) -> Tuple[str, str]:
@@ -345,9 +342,9 @@ def terminate_running_agents(agent_tag_name: str, boto3_session: boto3.session.S
 
     instance_ids = []
     for reservation in reservations:
-        for instance in reservation["Instances"]:
-            instance_ids.append(instance["InstanceId"])
-
+        instance_ids.extend(
+            instance["InstanceId"] for instance in reservation["Instances"]
+        )
     if instance_ids:
         ec2.terminate_instances(InstanceIds=instance_ids)
         for n in range(NUM_WAITS):
@@ -409,10 +406,10 @@ def delete_spot_requests_and_agents(
 
     ec2 = boto3_session.client("ec2")
 
-    if len(instances_to_del) > 0:
+    if instances_to_del:
         ec2.terminate_instances(InstanceIds=instances_to_del)
 
-    if len(requests_to_term) > 0:
+    if requests_to_term:
         ec2.cancel_spot_instance_requests(SpotInstanceRequestIds=requests_to_term)
 
     return instances_to_del

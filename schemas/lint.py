@@ -115,10 +115,10 @@ def check_id(schema: dict, path: str, ctx: LintContext) -> Errors:
     if "$id" not in schema:
         return [(path, "$id is missing")]
 
-    subpath = path + ".$id"
-
-    exp = "http://determined.ai/schemas/" + ctx.filepath
+    exp = f"http://determined.ai/schemas/{ctx.filepath}"
     if schema["$id"] != exp:
+        subpath = f"{path}.$id"
+
         return [(subpath, f"$id ({schema['$id']}) is not correct for filename")]
 
     return []
@@ -140,7 +140,7 @@ def is_nullable(object_schema: dict, key: str) -> bool:
     if "type" in sub:
         if isinstance(sub["type"], list):
             return "null" in sub["type"]
-        return bool(sub["type"] == "null")
+        return sub["type"] == "null"
     return False
 
 
@@ -155,7 +155,7 @@ def check_default_typing(schema: dict, path: str, ctx: LintContext) -> Errors:
 
     required = schema.get("required", [])
     for key, sub in schema["properties"].items():
-        subpath = path + f".{key}"
+        subpath = f"{path}.{key}"
         if key in required and isinstance(sub, dict) and "default" in sub:
             errors.append((subpath, "default provided for required value"))
         if key not in required and isinstance(sub, dict) and "default" not in sub:
@@ -178,12 +178,12 @@ def check_default_locations(schema: dict, path: str, ctx: LintContext) -> Errors
     errors = []
 
     for key, sub in schema["properties"].items():
-        subpath = path + f".{key}"
+        subpath = f"{path}.{key}"
         if isinstance(sub, dict) and "default" in sub:
             if sub["default"] == "null":
                 errors.append(
                     (
-                        subpath + ".default",
+                        f"{subpath}.default",
                         "default is the literal 'null' string, probable typo",
                     )
                 )
@@ -194,7 +194,10 @@ def check_default_locations(schema: dict, path: str, ctx: LintContext) -> Errors
                 # This is pretty valid in json-schema normally, but it makes reading defaults
                 # out of json-schema (which we need in multiple languages) much harder.
                 errors.append(
-                    (subpath + ".default", "non-null default is defined on a subobject")
+                    (
+                        f"{subpath}.default",
+                        "non-null default is defined on a subobject",
+                    )
                 )
 
     return errors
@@ -214,7 +217,7 @@ def check_nullable(schema: dict, path: str, ctx: LintContext) -> Errors:
         if sub is True:
             # Don't complain about the universal match (true).
             continue
-        subpath = path + f".{key}"
+        subpath = f"{path}.{key}"
         # Make sure that nullability matches the requiredness.
         if is_required(schema, key) and is_nullable(schema, key):
             errors.append((subpath, "required property is nullable"))
@@ -248,12 +251,7 @@ def check_types_and_keywords(schema: dict, path: str, ctx: LintContext) -> Error
     for typ in types:
         keys = keys.difference(SUPPORTED_KEYWORDS_BY_TYPE[typ])
 
-    errors = []
-
-    for kw in keys:
-        errors.append((path, f"{kw} not allowed in schema of type {typ}"))
-
-    return errors
+    return [(path, f"{kw} not allowed in schema of type {typ}") for kw in keys]
 
 
 @register_linter
@@ -264,7 +262,7 @@ def check_union(schema: dict, path: str, ctx: LintContext) -> Errors:
     errors = []
 
     for idx, sub in enumerate(schema["union"]["items"]):
-        subpath = path + f"union.items.[{idx}]"
+        subpath = f"{path}union.items.[{idx}]"
         if not isinstance(sub, dict):
             errors.append((subpath, "is not a json object"))
             continue
@@ -284,7 +282,7 @@ def check_conditional(schema: dict, path: str, ctx: LintContext) -> Errors:
         return []
 
     conditional = schema["conditional"]
-    subpath = path + ".conditional"
+    subpath = f"{path}.conditional"
 
     errors = []
 
@@ -304,7 +302,7 @@ def check_compareProperties(schema: dict, path: str, ctx: LintContext) -> Errors
         return []
 
     compare = schema["compareProperties"]
-    subpath = path + ".compareProperties"
+    subpath = f"{path}.compareProperties"
 
     errors = []  # type: Errors
 
@@ -339,7 +337,7 @@ def iter_subdict(schema: dict, path: str, key: str, ctx: LintContext) -> Errors:
     errors = []
 
     for key, sub in child.items():
-        errors += iter_schema(sub, path + f".{key}", ctx)
+        errors += iter_schema(sub, f"{path}.{key}", ctx)
 
     return errors
 
@@ -359,7 +357,7 @@ def iter_sublist(schema: dict, path: str, key: str, ctx: LintContext) -> Errors:
     errors = []
 
     for idx, sub in enumerate(child):
-        errors += iter_schema(sub, path + f"[{idx}]", ctx)
+        errors += iter_schema(sub, f"{path}[{idx}]", ctx)
 
     return errors
 
@@ -524,7 +522,6 @@ if __name__ == "__main__":
     parser.add_argument("files", nargs="*", help="files to check")
     parser.add_argument("--check", action="store_true", help="no auto-reformatting")
     args = parser.parse_args()
-    errors = lint(args.files, reformat=not args.check)
-    if errors:
+    if errors := lint(args.files, reformat=not args.check):
         print("\n".join(errors), file=sys.stderr)
         sys.exit(1)

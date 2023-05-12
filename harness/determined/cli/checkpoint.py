@@ -19,7 +19,7 @@ def format_validation(validation: Dict[str, Any]) -> List[Any]:
     elif validation["state"] in (constants.ACTIVE, constants.ERROR):
         return [validation["state"], None]
     else:
-        raise AssertionError("Invalid validation state: {}".format(validation["state"]))
+        raise AssertionError(f'Invalid validation state: {validation["state"]}')
 
 
 # TODO(neilc): Report more info about checkpoints and validations.
@@ -36,7 +36,7 @@ def format_checkpoint(checkpoint: Dict[str, Any]) -> List[Any]:
     elif checkpoint["state"] in (constants.ACTIVE, constants.ERROR):
         return [checkpoint["state"], None, json.dumps(checkpoint["metadata"], indent=4)]
     else:
-        raise AssertionError("Invalid checkpoint state: {}".format(checkpoint["state"]))
+        raise AssertionError(f'Invalid checkpoint state: {checkpoint["state"]}')
 
 
 def render_checkpoint(checkpoint: experimental.Checkpoint, path: Optional[str] = None) -> None:
@@ -68,7 +68,9 @@ def list(args: Namespace) -> None:
         params["best"] = args.best
 
     r = api.get(
-        args.master, "experiments/{}/checkpoints".format(args.experiment_id), params=params
+        args.master,
+        f"experiments/{args.experiment_id}/checkpoints",
+        params=params,
     ).json()
     searcher_metric = r["metric_name"]
 

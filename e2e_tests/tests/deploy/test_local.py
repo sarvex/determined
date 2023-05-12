@@ -74,7 +74,7 @@ def test_cluster_down() -> None:
 
     cluster_up(["--cluster-name", name])
 
-    container_name = name + "_determined-master_1"
+    container_name = f"{name}_determined-master_1"
     client = docker.from_env()
 
     containers = client.containers.list(filters={"name": container_name})
@@ -140,7 +140,7 @@ def test_agents_made() -> None:
         f"{num_agents}",
     ]
     cluster_up(arguments)
-    container_names = [name + f"-agent-{i}" for i in range(0, num_agents)]
+    container_names = [f"{name}-agent-{i}" for i in range(0, num_agents)]
     client = docker.from_env()
 
     for container_name in container_names:
@@ -160,7 +160,7 @@ def test_master_up_down() -> None:
 
     master_up(["--master-name", name])
 
-    container_name = name + "_determined-master_1"
+    container_name = f"{name}_determined-master_1"
     client = docker.from_env()
 
     containers = client.containers.list(filters={"name": container_name})

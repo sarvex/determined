@@ -64,7 +64,7 @@ def wait_for_agents(min_agent_count: int) -> None:
         if num_agents() >= min_agent_count:
             return
 
-        print("Waiting for {} agents to register...".format(min_agent_count))
+        print(f"Waiting for {min_agent_count} agents to register...")
         time.sleep(1)
 
 

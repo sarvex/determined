@@ -34,15 +34,15 @@ def apply_constraints(hparams, num_params):
     reduce_skip_count = 0
     normal_conv_count = 0
     for hp, val in hparams.items():
-        if val == "skip_connect":
-            if "normal" in hp:
-                normal_skip_count += 1
-            elif "reduce" in hp:
-                reduce_skip_count += 1
         if val == "sep_conv_3x3":
             if "normal" in hp:
                 normal_conv_count += 1
 
+        elif val == "skip_connect":
+            if "normal" in hp:
+                normal_skip_count += 1
+            elif "reduce" in hp:
+                reduce_skip_count += 1
     # Reject if num skip_connect >= 3 or <1 in either normal or reduce cell.
     if normal_skip_count >= 3 or reduce_skip_count >= 3:
         raise det.InvalidHP("too many skip_connect operations")
@@ -79,11 +79,9 @@ class DARTSCNNTrial(PyTorchTrial):
                 genotype,
             )
         )
-        print("param size = {} MB".format(utils.count_parameters_in_MB(self.model)))
-        size = 0
-        for p in self.model.parameters():
-            size += p.nelement()
-        print("param count: {}".format(size))
+        print(f"param size = {utils.count_parameters_in_MB(self.model)} MB")
+        size = sum(p.nelement() for p in self.model.parameters())
+        print(f"param count: {size}")
 
         # Apply constraints if desired
         if "use_constraints" in self.hparams and self.hparams["use_constraints"]:
@@ -114,16 +112,13 @@ class DARTSCNNTrial(PyTorchTrial):
             AttrDict(self.hparams)
         )
         train_data = dset.CIFAR10(
-            root="{}/data-rank{}".format(
-                self.data_config["data_download_dir"],
-                self.context.distributed.get_rank(),
-            ),
+            root=f'{self.data_config["data_download_dir"]}/data-rank{self.context.distributed.get_rank()}',
             train=True,
             download=True,
             transform=train_transform,
         )
 
-        train_queue = DataLoader(
+        return DataLoader(
             train_data,
             batch_size=self.context.get_per_slot_batch_size(),
             shuffle=True,
@@ -131,31 +126,24 @@ class DARTSCNNTrial(PyTorchTrial):
             num_workers=2,
         )
 
-        return train_queue
-
     def build_validation_data_loader(self) -> DataLoader:
         train_transform, valid_transform = utils._data_transforms_cifar10(
             AttrDict(self.hparams)
         )
         valid_data = dset.CIFAR10(
-            root="{}/data-rank{}".format(
-                self.data_config["data_download_dir"],
-                self.context.distributed.get_rank(),
-            ),
+            root=f'{self.data_config["data_download_dir"]}/data-rank{self.context.distributed.get_rank()}',
             train=False,
             download=True,
             transform=valid_transform,
         )
 
-        valid_queue = DataLoader(
+        return DataLoader(
             valid_data,
             batch_size=self.context.get_per_slot_batch_size(),
             shuffle=False,
             pin_memory=True,
             num_workers=2,
         )
-
-        return valid_queue
 
     def get_genotype_from_hps(self):
         # This function creates an architecture definition
@@ -165,12 +153,8 @@ class DARTSCNNTrial(PyTorchTrial):
         for cell in ["normal", "reduce"]:
             for node in range(4):
                 for edge in [1, 2]:
-                    edge_ind = self.hparams[
-                        "{}_node{}_edge{}".format(cell, node + 1, edge)
-                    ]
-                    edge_op = self.hparams[
-                        "{}_node{}_edge{}_op".format(cell, node + 1, edge)
-                    ]
+                    edge_ind = self.hparams[f"{cell}_node{node + 1}_edge{edge}"]
+                    edge_op = self.hparams[f"{cell}_node{node + 1}_edge{edge}_op"]
                     cell_config[cell].append((edge_op, edge_ind))
         print(cell_config)
         return Genotype(
@@ -190,8 +174,8 @@ class DARTSCNNTrial(PyTorchTrial):
             / self.hparams["train_epochs"]
         )
         if batch_idx == 0 or epoch_idx > self._last_epoch:
-            print("epoch {} lr: {}".format(epoch_idx, self.scheduler.get_last_lr()[0]))
-            print("drop_path_prob: {}".format(self.model.drop_path_prob))
+            print(f"epoch {epoch_idx} lr: {self.scheduler.get_last_lr()[0]}")
+            print(f"drop_path_prob: {self.model.drop_path_prob}")
         self._last_epoch = epoch_idx
 
         # Forward pass

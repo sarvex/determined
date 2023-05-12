@@ -49,24 +49,31 @@ class AlbertSQuADPyTorch(PyTorchTrial):
             self.context.get_data_config().get("pretrained_model_name"),
             cache_dir=cache_dir_per_rank,
         )
-        self.model = self.context.wrap_model(self.model_class.from_pretrained(
-            self.context.get_data_config().get("pretrained_model_name"),
-            from_tf=bool(".ckpt" in self.context.get_data_config().get("pretrained_model_name")),
-            config=config,
-            cache_dir=cache_dir_per_rank,
-        ))
+        self.model = self.context.wrap_model(
+            self.model_class.from_pretrained(
+                self.context.get_data_config().get("pretrained_model_name"),
+                from_tf=".ckpt"
+                in self.context.get_data_config().get("pretrained_model_name"),
+                config=config,
+                cache_dir=cache_dir_per_rank,
+            )
+        )
 
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {
                 "params": [
-                    p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)
+                    p
+                    for n, p in self.model.named_parameters()
+                    if all(nd not in n for nd in no_decay)
                 ],
                 "weight_decay": self.context.get_hparam("weight_decay"),
             },
             {
                 "params": [
-                    p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)
+                    p
+                    for n, p in self.model.named_parameters()
+                    if any(nd in n for nd in no_decay)
                 ],
                 "weight_decay": 0.0,
             },
@@ -200,5 +207,4 @@ class AlbertSQuADPyTorch(PyTorchTrial):
             self.context.get_hparam("null_score_diff_threshold"),
             self.tokenizer,
         )
-        results = squad_evaluate(self.validation_examples, predictions)
-        return results
+        return squad_evaluate(self.validation_examples, predictions)

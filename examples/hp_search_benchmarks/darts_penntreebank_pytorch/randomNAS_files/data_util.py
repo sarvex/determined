@@ -105,7 +105,7 @@ class BatchSentLoader(object):
 
         batch_size = min(self.batch_size, len(self.sort_sents) - self.idx)
         batch = self.sort_sents[self.idx : self.idx + batch_size]
-        max_len = max([s.size(0) for s in batch])
+        max_len = max(s.size(0) for s in batch)
         tensor = torch.LongTensor(max_len, batch_size).fill_(self.pad_id)
         for i in range(len(batch)):
             s = batch[i]

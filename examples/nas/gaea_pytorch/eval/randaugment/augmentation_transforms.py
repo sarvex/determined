@@ -135,7 +135,7 @@ class TransformFunction(object):
         self.name = name
 
     def __repr__(self):
-        return "<" + self.name + ">"
+        return f"<{self.name}>"
 
     def __call__(self, pil_img):
         return self.f(pil_img)
@@ -303,8 +303,7 @@ def _crop_impl(pil_img, level, img_shape, interpolation=Image.BILINEAR):
     """Applies a crop to `pil_img` with the size depending on the `level`."""
     height, width = img_shape
     cropped = pil_img.crop((level, level, width - level, height - level))
-    resized = cropped.resize((width, height), interpolation)
-    return resized
+    return cropped.resize((width, height), interpolation)
 
 
 crop_bilinear = TransformT("CropBilinear", _crop_impl)

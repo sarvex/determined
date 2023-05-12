@@ -32,8 +32,7 @@ def binary_error_rate(predictions: torch.Tensor, labels: torch.Tensor) -> float:
         predictions = torch.squeeze(predictions)
 
     errors = torch.sum(labels.to(torch.long) != torch.round(predictions).to(torch.long))
-    result = float(errors) / predictions.shape[0]  # type: float
-    return result
+    return float(errors) / predictions.shape[0]
 
 
 def xor_data_loader(batch_size: int) -> pytorch.DataLoader:

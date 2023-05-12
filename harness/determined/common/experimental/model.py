@@ -92,7 +92,7 @@ class Model:
         """
         if version == 0:
             resp = self._session.get(
-                "/api/v1/models/{}/versions/".format(self.name),
+                f"/api/v1/models/{self.name}/versions/",
                 {"limit": 1, "order_by": 2},
             )
 
@@ -110,7 +110,7 @@ class Model:
                 self._session,
             )
         else:
-            resp = self._session.get("/api/v1/models/{}/versions/{}".format(self.name, version))
+            resp = self._session.get(f"/api/v1/models/{self.name}/versions/{version}")
 
         data = resp.json()
         return checkpoint.Checkpoint.from_json(data["modelVersion"]["checkpoint"], self._session)
@@ -127,7 +127,7 @@ class Model:
             order_by (enum): A member of the :class:`ModelOrderBy` enum.
         """
         resp = self._session.get(
-            "/api/v1/models/{}/versions/".format(self.name),
+            f"/api/v1/models/{self.name}/versions/",
             params={"order_by": order_by.value},
         )
         data = resp.json()
@@ -154,7 +154,7 @@ class Model:
             checkpoint_uuid: The UUID of the checkpoint to register.
         """
         resp = self._session.post(
-            "/api/v1/models/{}/versions".format(self.name),
+            f"/api/v1/models/{self.name}/versions",
             body={"checkpoint_uuid": checkpoint_uuid},
         )
 
@@ -182,8 +182,13 @@ class Model:
             self.metadata[key] = val
 
         self._session.patch(
-            "/api/v1/models/{}".format(self.name),
-            body={"model": {"metadata": self.metadata, "description": self.description}},
+            f"/api/v1/models/{self.name}",
+            body={
+                "model": {
+                    "metadata": self.metadata,
+                    "description": self.description,
+                }
+            },
         )
 
     def remove_metadata(self, keys: List[str]) -> None:
@@ -199,8 +204,13 @@ class Model:
                 del self.metadata[key]
 
         self._session.patch(
-            "/api/v1/models/{}".format(self.name),
-            body={"model": {"metadata": self.metadata, "description": self.description}},
+            f"/api/v1/models/{self.name}",
+            body={
+                "model": {
+                    "metadata": self.metadata,
+                    "description": self.description,
+                }
+            },
         )
 
     def to_json(self) -> Dict[str, Any]:
@@ -213,7 +223,7 @@ class Model:
         }
 
     def __repr__(self) -> str:
-        return "Model(name={}, metadata={})".format(self.name, json.dumps(self.metadata))
+        return f"Model(name={self.name}, metadata={json.dumps(self.metadata)})"
 
     @staticmethod
     def from_json(data: Dict[str, Any], session: session.Session) -> "Model":

@@ -74,4 +74,3 @@ if __name__ == "__main__":
         main()
     except det.InvalidHP:
         logging.info("InvalidHP detected, worker is exiting")
-        pass

@@ -25,8 +25,9 @@ class NoOpTrialController(det.CallbackTrialController):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-        check_startup_hook_ran = self.env.hparams.get("check_startup_hook_ran", False)
-        if check_startup_hook_ran:
+        if check_startup_hook_ran := self.env.hparams.get(
+            "check_startup_hook_ran", False
+        ):
             check.true(os.path.isfile("startup-hook-ran"), "File should exists.")
 
         self.chaos = random.SystemRandom()
@@ -84,7 +85,7 @@ class NoOpTrialController(det.CallbackTrialController):
         elif self.metrics_progression == "increasing":
             return 1 - (self.metrics_base ** self.steps_trained()) + noise
         else:
-            raise ValueError("Invalid `metrics_progression` {}".format(self.metrics_progression))
+            raise ValueError(f"Invalid `metrics_progression` {self.metrics_progression}")
 
     def train_for_step(self, step_id: int, num_batches: int) -> Dict[str, Any]:
         if self.request_stop:
@@ -96,13 +97,12 @@ class NoOpTrialController(det.CallbackTrialController):
                 f.write(b"\x00")
         self.trained_steps[step_id] += 1
         metrics = {name: self.current_metric() for name in ["loss", *self.training_metrics()]}
-        response = {
+        return {
             "metrics": det.util.make_metrics(
                 self._batch_size * num_batches, [metrics] * num_batches
             ),
             "stop_requested": self.context.get_stop_requested(),
         }
-        return response
 
     def compute_validation_metrics(self, step_id: int) -> Dict[str, Any]:
         if self.fail_on_first_validation:
@@ -112,18 +112,21 @@ class NoOpTrialController(det.CallbackTrialController):
         metrics = {
             name: self.current_metric() for name in ["validation_error", *self.validation_metrics()]
         }
-        response = {
-            "metrics": {"validation_metrics": metrics, "num_inputs": self.validation_set_size},
+        return {
+            "metrics": {
+                "validation_metrics": metrics,
+                "num_inputs": self.validation_set_size,
+            },
             "stop_requested": self.context.get_stop_requested(),
         }
-        return response
 
     def training_metrics(self) -> Dict[str, Any]:
-        return {"metric_{}".format(i): None for i in range(1, self.num_training_metrics)}
+        return {f"metric_{i}": None for i in range(1, self.num_training_metrics)}
 
     def validation_metrics(self) -> Dict[str, Any]:
         return {
-            "validation_metric_{}".format(i): None for i in range(1, self.num_validation_metrics)
+            f"validation_metric_{i}": None
+            for i in range(1, self.num_validation_metrics)
         }
 
     def batch_size(self) -> int:
@@ -137,7 +140,9 @@ class NoOpTrialController(det.CallbackTrialController):
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
         fpath = path.joinpath(self.CHECKPOINT_FILENAME)
-        logging.info("Saving checkpoint {}, steps_trained {}".format(fpath, self.steps_trained()))
+        logging.info(
+            f"Saving checkpoint {fpath}, steps_trained {self.steps_trained()}"
+        )
         with fpath.open("w") as f:
             json.dump(self.trained_steps, f, sort_keys=True, indent=4)
         path.chmod(0o777)
@@ -155,7 +160,7 @@ class NoOpTrialController(det.CallbackTrialController):
                 check.gt_eq(v, 0)
             self.trained_steps = collections.Counter(jbody)
             logging.info(
-                "Loaded checkpoint {}, steps_trained {}".format(fpath, self.steps_trained())
+                f"Loaded checkpoint {fpath}, steps_trained {self.steps_trained()}"
             )
 
     def chaos_failure(self, probability: Optional[float]) -> None:

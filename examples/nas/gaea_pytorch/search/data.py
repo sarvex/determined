@@ -20,7 +20,7 @@ class BilevelDataset(Dataset):
         # This is so we make sure to loop images in both train
         # and val splits exactly once in an epoch.
         n_train = int(0.5 * len(inds))
-        self.train_inds = inds[0:n_train]
+        self.train_inds = inds[:n_train]
         self.val_inds = inds[n_train : 2 * n_train]
         assert len(self.train_inds) == len(self.val_inds)
 

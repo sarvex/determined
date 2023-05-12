@@ -130,11 +130,9 @@ class OneVarTrialLRScheduler(OneVarTrial):
         raise NotImplementedError()
 
     def train_batch(self, batch: Any, epoch_idx: int, batch_idx: int):
-        if self.last_lr is None:
-            self.last_lr = self.read_lr_value()
-        else:
+        if self.last_lr is not None:
             self.check_lr_value(batch_idx)
-            self.last_lr = self.read_lr_value()
+        self.last_lr = self.read_lr_value()
         return super().train_batch(batch, epoch_idx, batch_idx)
 
 

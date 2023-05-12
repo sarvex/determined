@@ -30,7 +30,7 @@ class RNNModel(nn.Module):
         self.ntoken = ntoken
         self.drop = nn.Dropout(dropout)
         self.encoder = nn.Embedding(ntoken, ninp)
-        assert rnn_type in ["LSTM", "GRU"]
+        assert rnn_type in {"LSTM", "GRU"}
         self.rnn = getattr(nn, rnn_type)(ninp, nhid, nlayers, dropout=dropout)
         self.decoder = nn.Linear(nhid, ntoken)
 
@@ -170,7 +170,7 @@ class TransformerModel(nn.Module):
         mask = (
             mask.float()
             .masked_fill(mask == 0, float("-inf"))
-            .masked_fill(mask == 1, float(0.0))
+            .masked_fill(mask == 1, 0.0)
         )
         return mask
 

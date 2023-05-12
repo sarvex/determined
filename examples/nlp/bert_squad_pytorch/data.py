@@ -23,12 +23,12 @@ def load_and_cache_examples(data_dir: str, tokenizer, task, max_seq_length, doc_
         os.makedirs(data_dir)
     if evaluate:
         with urllib.request.urlopen(validation_url) as url:
-            with open(data_dir + "/" + validation_file, 'w') as f:
+            with open(f"{data_dir}/{validation_file}", 'w') as f:
                 f.write(url.read().decode())
         examples = processor.get_dev_examples(data_dir, filename=validation_file)
     else:
         with urllib.request.urlopen(train_url) as url:
-            with open(data_dir + "/" + train_file, 'w') as f:
+            with open(f"{data_dir}/{train_file}", 'w') as f:
                 f.write(url.read().decode())
         examples = processor.get_train_examples(data_dir, filename=train_file)
 

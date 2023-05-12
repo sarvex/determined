@@ -84,12 +84,18 @@ def group_parameters_for_optimizer(
     return [
         {
             "params": [
-                p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)
+                p
+                for n, p in model.named_parameters()
+                if all(nd not in n for nd in no_decay)
             ],
             "weight_decay": weight_decay,
         },
         {
-            "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
+            "params": [
+                p
+                for n, p in model.named_parameters()
+                if any(nd in n for nd in no_decay)
+            ],
             "weight_decay": 0.0,
         },
     ]
@@ -279,7 +285,7 @@ class BaseTransformerTrial(det_torch.PyTorchTrial):
         for hp in required_hps:
             assert (
                 hp in self.hparams
-            ), "{} is a required hyperparameter for BaseTransformerTrial".format(hp)
+            ), f"{hp} is a required hyperparameter for BaseTransformerTrial"
 
     def train_batch(self, batch: Any, epoch_idx: int, batch_idx: int) -> Any:
         # By default, all HF models return the loss in the first element.

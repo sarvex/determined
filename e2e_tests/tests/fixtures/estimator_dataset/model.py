@@ -64,9 +64,7 @@ class EstimatorDatasetTrial(estimator.EstimatorTrial):
         self.hparams = context.get_hparams()
 
     def debug_print(self, *args):
-        if self.hparams["print"]:
-            return tf.print(*args)
-        return tf.no_op()
+        return tf.print(*args) if self.hparams["print"] else tf.no_op()
 
     def model_fn(self, features, labels, mode):
         w = tf.Variable(np.float64(0.0), name="w", dtype=tf.float64, trainable=True)

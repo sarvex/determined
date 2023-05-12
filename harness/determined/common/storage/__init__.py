@@ -48,7 +48,7 @@ def build(config: Dict[str, Any], container_path: Optional[str]) -> StorageManag
     try:
         subclass = _STORAGE_MANAGERS[identifier]
     except KeyError:
-        raise TypeError("Unknown storage type: {}".format(identifier))
+        raise TypeError(f"Unknown storage type: {identifier}")
 
     # Remove configurations that should not be directly passed to
     # subclasses. Keeping these would result in the subclass __init__()
@@ -65,7 +65,7 @@ def build(config: Dict[str, Any], container_path: Optional[str]) -> StorageManag
         else:
             config["storage_path"] = config.get("checkpoint_path", None)
     elif identifier == "azure":
-        if not ("connection_string" in config or "account_url" in config):
+        if "connection_string" not in config and "account_url" not in config:
             raise ValueError(
                 """At least one of [connection_string, account_url] must be specified for Azure Blob
                  Storage, but none were."""
@@ -80,7 +80,7 @@ def build(config: Dict[str, Any], container_path: Optional[str]) -> StorageManag
         return subclass.from_config(config, container_path)
     except TypeError as e:
         raise TypeError(
-            "Failed to instantiate {} checkpoint storage: {}".format(identifier, str(e))
+            f"Failed to instantiate {identifier} checkpoint storage: {str(e)}"
         )
 
 

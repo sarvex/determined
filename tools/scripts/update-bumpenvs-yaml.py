@@ -104,7 +104,7 @@ def get_all_builds(commit: str) -> Dict[str, Build]:
 def get_all_artifacts(builds: Dict[str, Build]) -> Dict[str, str]:
     artifacts = {}
     for b in builds.values():
-        artifacts.update(b.get_artifacts())
+        artifacts |= b.get_artifacts()
 
     found = set(artifacts.keys())
     assert (
@@ -157,7 +157,7 @@ def parse_packer_log(packer_log: str) -> Dict[str, str]:
         if a.msgtype == "builder-id" and a.val == "packer.googlecompute"
     ]
     # aws gov images do not have matching gcp environment images.
-    if len(gcp_builders) == 0:
+    if not gcp_builders:
         return out
     assert len(gcp_builders) == 1, f"expected one gcp builder but got: {gcp_builders}"
     gcp_builder = gcp_builders[0]

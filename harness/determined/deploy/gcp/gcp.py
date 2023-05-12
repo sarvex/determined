@@ -67,7 +67,7 @@ def terraform_write_variables(configs: Dict, variables_to_exclude: List) -> str:
     # Add GCP-friendly version key to configs. We persist this since it's used
     # across the cluster lifecycle: to name resources on provisioning, and to
     # filter for the master and dynamic agents on deprovisioning.
-    configs["det_version_key"] = det_version.replace(".", "-")[0:8]
+    configs["det_version_key"] = det_version.replace(".", "-")[:8]
 
     # Track the default zone in configuration variables. This is needed
     # during deprovisioning.
@@ -98,9 +98,7 @@ def terraform_init(configs: Dict, env: Dict) -> None:
 
     command = ["terraform", "init"]
     command += [
-        "-backend-config=path={}".format(
-            os.path.join(configs["local_state_path"], "terraform.tfstate")
-        )
+        f'-backend-config=path={os.path.join(configs["local_state_path"], "terraform.tfstate")}'
     ]
 
     run_command(command, env, cwd=terraform_dir(configs))
@@ -166,7 +164,7 @@ def wait_for_operations(compute: Any, tf_vars: Dict, operations: List) -> bool:
                     statuses[i] = True
 
         # Short circuit and return True iff all operations have succeeded
-        if all(status for status in statuses):
+        if all(statuses):
             return True
 
         time.sleep(5)
@@ -187,8 +185,7 @@ def list_instances(compute: Any, tf_vars: Dict, filter: str) -> Any:
 
 def delete_instances(compute: Any, tf_vars: Dict, instances: List) -> None:
     """Terminate provided instances in this deployment."""
-    instance_names = [instance["name"] for instance in instances]
-    if instance_names:
+    if instance_names := [instance["name"] for instance in instances]:
         print(f"Terminating instances: {', '.join(instance_names)}")
         print("This may take a few minutes...")
         operations = []
@@ -196,8 +193,7 @@ def delete_instances(compute: Any, tf_vars: Dict, instances: List) -> None:
             response = delete_instance(compute, tf_vars, instance_name)
             operations.append(response["name"])
 
-        succeeded = wait_for_operations(compute, tf_vars, operations)
-        if succeeded:
+        if succeeded := wait_for_operations(compute, tf_vars, operations):
             print(f"Successfully terminated instances: {', '.join(instance_names)}...")
         else:
             print(
@@ -242,8 +238,9 @@ def stop_master(compute: Any, tf_vars: Dict) -> None:
         instance_name = instances[0]["name"]
         print(f"Stopping master instance: {instance_name}...")
         response = stop_instance(compute, tf_vars, instance_name)
-        succeeded = wait_for_operations(compute, tf_vars, [response["name"]])
-        if succeeded:
+        if succeeded := wait_for_operations(
+            compute, tf_vars, [response["name"]]
+        ):
             print(f"Successfully stopped master instance: {instance_name}")
         else:
             print(f"\nWARNING: Unable to confirm master instance stopped: {instance_name}\n")
@@ -302,8 +299,7 @@ def validate_gcp_credentials(configs: Dict) -> None:
     except DefaultCredentialsError:
         print(
             colored("Unable to locate GCP credentials.", "red"),
-            "Please set %s or explicitly create credentials"
-            % colored("GOOGLE_APPLICATION_CREDENTIALS", "yellow"),
+            f'Please set {colored("GOOGLE_APPLICATION_CREDENTIALS", "yellow")} or explicitly create credentials',
             "and re-run the application. ",
             "For more information, please see",
             "https://docs.determined.ai/latest/how-to/installation/gcp.html#credentials",
@@ -314,8 +310,7 @@ def validate_gcp_credentials(configs: Dict) -> None:
 
 
 def set_gcp_credentials_env(tf_vars: Dict) -> None:
-    keypath = tf_vars.get("keypath")
-    if keypath:
+    if keypath := tf_vars.get("keypath"):
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = keypath
 
 

@@ -22,11 +22,10 @@ class EMA(nn.Module):
         # be saved as part of state_dict.
         for i, p in enumerate(params):
             copy = p.clone().detach()
-            self.register_buffer("shadow" + str(i), copy)
+            self.register_buffer(f"shadow{str(i)}", copy)
 
     def shadow_vars(self):
-        for b in self.buffers():
-            yield b
+        yield from self.buffers()
 
     def forward(self, new_params):
         for avg, new in zip(self.shadow_vars(), new_params):
@@ -44,19 +43,17 @@ class EMAWrapper(nn.Module):
         # Create copies in case we have to resume.
         for i, p in enumerate(self.ema_vars()):
             copy = p.clone().detach()
-            self.register_buffer("curr" + str(i), copy)
+            self.register_buffer(f"curr{str(i)}", copy)
 
     def curr_vars(self):
         for n, b in self.named_buffers():
-            if n[0:4] == "curr":
+            if n[:4] == "curr":
                 yield b
 
     def ema_vars(self):
-        for p in self.model.parameters():
-            yield p
+        yield from self.model.parameters()
         for n, b in self.model.named_buffers():
-            if "running_mean" or "running_var" in n:
-                yield b
+            yield b
 
     def forward(self, *args):
         return self.model(*args)
@@ -141,8 +138,7 @@ class CrossEntropyLabelSmooth(nn.Module):
         log_probs = self.logsoftmax(inputs)
         targets = torch.zeros_like(log_probs).scatter_(1, targets.unsqueeze(1), 1)
         targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
-        loss = (-targets * log_probs).mean(0).sum()
-        return loss
+        return (-targets * log_probs).mean(0).sum()
 
 
 # Memory efficient version for training from: https://github.com/lukemelas/EfficientNet-PyTorch/blob/master/efficientnet_pytorch/utils.py
@@ -189,8 +185,7 @@ class RandAugment(object):
 
     def __call__(self, img):
         policy = self.policies[np.random.choice(len(self.policies))]
-        final_img = augmentation_transforms.apply_policy(policy, img)
-        return final_img
+        return augmentation_transforms.apply_policy(policy, img)
 
 
 class SqueezeAndExcitation(nn.Module):
@@ -213,13 +208,7 @@ class SqueezeAndExcitation(nn.Module):
         return torch.sigmoid(se_tensor) * x
 
     def __repr__(self):
-        return "{}({}, {}, spatial_dims={}, active_fn={})".format(
-            self._get_name(),
-            self.n_feature,
-            self.n_hidden,
-            self.spatial_dims,
-            self.active_fn,
-        )
+        return f"{self._get_name()}({self.n_feature}, {self.n_hidden}, spatial_dims={self.spatial_dims}, active_fn={self.active_fn})"
 
 
 class AvgrageMeter(object):

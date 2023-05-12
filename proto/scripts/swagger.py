@@ -27,9 +27,7 @@ def merge_dict(d1: Dict, d2: Dict) -> None:
 
 
 def capitalize(s: str) -> str:
-    if len(s) <= 1:
-        return s.title()
-    return s[0].upper() + s[1:]
+    return s.title() if len(s) <= 1 else s[0].upper() + s[1:]
 
 def to_lower_camel_case(snake_str):
     components = snake_str.split('_')

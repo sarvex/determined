@@ -23,7 +23,7 @@ def imagenet_policies():
     ImageNet including Oxford 102 Flowers, Caltech-101, Oxford-IIIT Pets,
     FGVC Aircraft and Stanford Cars.
     """
-    policies = [
+    return [
         [("Posterize", 0.4, 8), ("Rotate", 0.6, 9)],
         [("Solarize", 0.6, 5), ("AutoContrast", 0.6, 5)],
         [("Equalize", 0.8, 8), ("Equalize", 0.6, 3)],
@@ -45,11 +45,10 @@ def imagenet_policies():
         [("ShearX", 0.6, 5), ("Equalize", 1.0, 9)],
         [("Color", 0.4, 0), ("Equalize", 0.6, 3)],
     ]
-    return policies
 
 
 def get_trans_list():
-    trans_list = [
+    return [
         "Invert",
         "Sharpness",
         "AutoContrast",
@@ -66,7 +65,6 @@ def get_trans_list():
         "Solarize",
         "Brightness",
     ]
-    return trans_list
 
 
 def randaug_policies():

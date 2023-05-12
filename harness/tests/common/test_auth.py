@@ -40,8 +40,7 @@ def test_cert_v0_upgrade() -> None:
 
         cert = certs_default_load(MOCK_MASTER_URL)
         assert isinstance(cert.bundle, str)
-        with open(cert.bundle) as fin:
-            loaded_cert_data = fin.read()
+        loaded_cert_data = Path(cert.bundle).read_text()
         assert loaded_cert_data.endswith(cert_data)
         assert not cert_path.exists()
 
@@ -51,6 +50,5 @@ def test_cert_v0_upgrade() -> None:
         # Load once again from v1.
         cert2 = certs_default_load(MOCK_MASTER_URL)
         assert isinstance(cert2.bundle, str)
-        with open(cert2.bundle) as fin:
-            loaded_cert_data = fin.read()
+        loaded_cert_data = Path(cert2.bundle).read_text()
         assert loaded_cert_data.endswith(cert_data)

@@ -108,17 +108,20 @@ class TFKerasContext:
             self._fit_validation_steps = validation_steps
 
     def _wrap_model_with_train_fn(self, model: Any, train_fn: Optional[Callable]) -> Any:
-        class _WrappedModel(type(model)):  # type: ignore
+
+
+
+        class _WrappedModel((type(model))):  # type: ignore
             def __init__(wrapper) -> None:
                 self.model = model
 
-            def __getattr__(wrapper, name):  # type: ignore
+            def __getattr__(self, name):  # type: ignore
                 return getattr(model, name)
 
-            def __setattr__(wrapper, name, value):  # type: ignore
+            def __setattr__(self, name, value):  # type: ignore
                 return setattr(model, name, value)
 
-            def __delattr__(wrapper, name):  # type: ignore
+            def __delattr__(self, name):  # type: ignore
                 return delattr(model, name)
 
             def compile(wrapper, *args: Any, **kwargs: Any) -> None:
@@ -236,6 +239,7 @@ class TFKerasContext:
 
                 if train_fn:
                     train_fn()
+
 
         return _WrappedModel()
 

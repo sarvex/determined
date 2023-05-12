@@ -34,16 +34,16 @@ class HDFSStorageManager(StorageManager):
     def post_store_path(self, storage_id: str, storage_dir: str, metadata: StorageMetadata) -> None:
         """post_store_path uploads the checkpoint to hdfs and deletes the original files."""
         try:
-            logging.info("Uploading storage {} to HDFS".format(storage_id))
+            logging.info(f"Uploading storage {storage_id} to HDFS")
             result = self.client.upload(metadata, storage_dir)
 
-            logging.info("Uploaded storage {} to HDFS path {}".format(storage_id, result))
+            logging.info(f"Uploaded storage {storage_id} to HDFS path {result}")
         finally:
             self._remove_checkpoint_directory(metadata.storage_id)
 
     @contextlib.contextmanager
     def restore_path(self, metadata: StorageMetadata) -> Iterator[str]:
-        logging.info("Downloading storage {} from HDFS".format(metadata.storage_id))
+        logging.info(f"Downloading storage {metadata.storage_id} from HDFS")
 
         self.download(metadata)
 
@@ -58,5 +58,5 @@ class HDFSStorageManager(StorageManager):
 
     @util.preserve_random_state
     def delete(self, metadata: StorageMetadata) -> None:
-        logging.info("Deleting storage {} from HDFS".format(metadata.storage_id))
+        logging.info(f"Deleting storage {metadata.storage_id} from HDFS")
         self.client.delete(metadata.storage_id, recursive=True)

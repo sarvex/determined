@@ -53,13 +53,12 @@ class UNetsTrial(TFKerasTrial):
 
         x = last(x)
 
-        model = tf.keras.Model(inputs=inputs, outputs=x)
-        return model
+        return tf.keras.Model(inputs=inputs, outputs=x)
 
     def download_weights(self):
-        weights_dir = self.download_directory + '/weights/'
+        weights_dir = f'{self.download_directory}/weights/'
         data_file = self.context.get_data_config()['data_file']
-        mobilenet_link = 'https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/' + data_file
+        mobilenet_link = f'https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/{data_file}'
         os.mkdir(weights_dir)
 
         urllib.request.urlretrieve(mobilenet_link,weights_dir + data_file)

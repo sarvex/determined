@@ -17,8 +17,7 @@ def make_one_var_tf_dataset_loader(hparams: Dict[str, Any], batch_size: int):
     xtrain = tf.data.Dataset.range(dataset_range).batch(batch_size)
     ytrain = tf.data.Dataset.range(dataset_range).batch(batch_size)
 
-    train_ds = tf.data.Dataset.zip((xtrain, ytrain))
-    return train_ds
+    return tf.data.Dataset.zip((xtrain, ytrain))
 
 
 class OneVarTrial(keras.TFKerasTrial):
@@ -78,4 +77,3 @@ class OneVarTrial(keras.TFKerasTrial):
             keras.callbacks.ReduceLROnPlateau(monitor="val_loss"),
             keras.callbacks.EarlyStopping(restore_best_weights=True),
         ]
-        return

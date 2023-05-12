@@ -200,7 +200,7 @@ class _CacheableDecorator:
                     shuffle_seed=self._shuffle_seed,
                     shard_rank=self._shard_rank,
                     num_shards=self._num_shards,
-                    drop_shard_remainder=True if self._training else False,
+                    drop_shard_remainder=bool(self._training),
                 )
                 self._dataset_length = len(stream_from_cache)
                 logging.info(f"Dataset {dataset_id}:{dataset_version} preparation finished.")

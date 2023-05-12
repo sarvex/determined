@@ -15,6 +15,9 @@ CLI_REDIRECT_PORT = 49176
 
 
 def make_handler(master_url: str, close_cb: Callable[[int], None]) -> Any:
+
+
+
     class TokenAcceptHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             try:
@@ -28,7 +31,7 @@ def make_handler(master_url: str, close_cb: Callable[[int], None]) -> Any:
                 token_store.set_token(me["username"], token)
                 token_store.set_active(me["username"])
 
-                print("Authenticated as {}.".format(me["username"]))
+                print(f'Authenticated as {me["username"]}.')
 
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
@@ -36,12 +39,13 @@ def make_handler(master_url: str, close_cb: Callable[[int], None]) -> Any:
                 self.wfile.write(b"You can close this window now.")
                 close_cb(0)
             except Exception as e:
-                print("Error authenticating: {}.".format(e))
+                print(f"Error authenticating: {e}.")
                 close_cb(1)
 
         def log_message(self, format: Any, *args: List[Any]) -> None:
             # Silence server logging.
             return
+
 
     return TokenAcceptHandler
 
@@ -66,18 +70,17 @@ def sso(parsed_args: Namespace) -> None:
         ]
         if not matching_providers:
             ps = ", ".join(p["name"].lower() for p in sso_providers)
-            print("Provider {} unsupported. (Providers found: {})".format(parsed_args.provider, ps))
+            print(f"Provider {parsed_args.provider} unsupported. (Providers found: {ps})")
             return
         elif len(matching_providers) > 1:
-            print("Multiple SSO providers found with name {}.".format(parsed_args.provider))
+            print(f"Multiple SSO providers found with name {parsed_args.provider}.")
             return
         matched_provider = matching_providers[0]
 
     sso_url = matched_provider["sso_url"] + "?relayState=cli%3Dtrue"
     webbrowser.open(sso_url)
     print(
-        "Your browser should open and prompt you to sign on;"
-        " if it did not, please visit {}".format(sso_url)
+        f"Your browser should open and prompt you to sign on; if it did not, please visit {sso_url}"
     )
 
     with HTTPServer(

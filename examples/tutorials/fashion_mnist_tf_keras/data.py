@@ -34,10 +34,10 @@ def load_training_data():
         "train-images-idx3-ubyte.gz",
     ]
 
-    paths = []
-    for fname in files:
-        paths.append(get_file(fname, origin=base + fname, cache_subdir=download_directory))
-
+    paths = [
+        get_file(fname, origin=base + fname, cache_subdir=download_directory)
+        for fname in files
+    ]
     with gzip.open(paths[0], "rb") as lbpath:
         y_train = np.frombuffer(lbpath.read(), np.uint8, offset=8)
 
@@ -66,10 +66,10 @@ def load_validation_data():
         "t10k-images-idx3-ubyte.gz",
     ]
 
-    paths = []
-    for fname in files:
-        paths.append(get_file(fname, origin=base + fname, cache_subdir=download_directory))
-
+    paths = [
+        get_file(fname, origin=base + fname, cache_subdir=download_directory)
+        for fname in files
+    ]
     with gzip.open(paths[0], "rb") as lbpath:
         y_test = np.frombuffer(lbpath.read(), np.uint8, offset=8)
 

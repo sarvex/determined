@@ -43,7 +43,7 @@ def validate_scheduler_type() -> Callable:
 def error_no_credentials() -> None:
     print(
         colored("Unable to locate AWS credentials.", "red"),
-        "Did you run %s?" % colored("aws configure", "yellow"),
+        f'Did you run {colored("aws configure", "yellow")}?',
     )
     print(
         "See the AWS Documentation for information on how to use AWS credentials:",
@@ -119,20 +119,24 @@ def deploy_aws(command: str, args: argparse.Namespace) -> None:
         constants.deployment_types.GOVCLOUD: govcloud.Govcloud,
     }  # type: Dict[str, Union[Type[base.DeterminedDeployment]]]
 
-    if args.deployment_type != constants.deployment_types.SIMPLE:
-        if args.agent_subnet_id is not None:
-            raise ValueError(
-                f"The agent-subnet-id can only be set if the deployment-type=simple. "
-                f"The agent-subnet-id was set to '{args.agent_subnet_id}', but the "
-                f"deployment-type={args.deployment_type}."
-            )
+    if (
+        args.deployment_type != constants.deployment_types.SIMPLE
+        and args.agent_subnet_id is not None
+    ):
+        raise ValueError(
+            f"The agent-subnet-id can only be set if the deployment-type=simple. "
+            f"The agent-subnet-id was set to '{args.agent_subnet_id}', but the "
+            f"deployment-type={args.deployment_type}."
+        )
 
-    if args.deployment_type == constants.deployment_types.GOVCLOUD:
-        if args.region not in ["us-gov-east-1", "us-gov-west-1"]:
-            raise ValueError(
-                "When deploying to GovCloud, set the region to either us-gov-east-1 "
-                "or us-gov-west-1."
-            )
+    if (
+        args.deployment_type == constants.deployment_types.GOVCLOUD
+        and args.region not in ["us-gov-east-1", "us-gov-west-1"]
+    ):
+        raise ValueError(
+            "When deploying to GovCloud, set the region to either us-gov-east-1 "
+            "or us-gov-west-1."
+        )
 
     master_tls_cert = master_tls_key = ""
     if args.master_tls_cert:

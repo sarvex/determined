@@ -34,7 +34,7 @@ def list_template(args: Namespace) -> None:
 
 @authentication.required
 def describe_template(args: Namespace) -> None:
-    resp = api.get(args.master, path="templates/{}".format(args.template_name)).json()
+    resp = api.get(args.master, path=f"templates/{args.template_name}").json()
     template = render.unmarshal(TemplateAll, resp, {"config": _parse_config})
     print(template.config)
 
@@ -43,14 +43,14 @@ def describe_template(args: Namespace) -> None:
 def set_template(args: Namespace) -> None:
     with args.template_file:
         body = util.safe_load_yaml_with_exceptions(args.template_file)
-        api.put(args.master, path="templates/" + args.template_name, body=body)
-        print(colored("Set template {}".format(args.template_name), "green"))
+        api.put(args.master, path=f"templates/{args.template_name}", body=body)
+        print(colored(f"Set template {args.template_name}", "green"))
 
 
 @authentication.required
 def remove_templates(args: Namespace) -> None:
-    api.delete(args.master, path="templates/" + args.template_name)
-    print(colored("Removed template {}".format(args.template_name), "green"))
+    api.delete(args.master, path=f"templates/{args.template_name}")
+    print(colored(f"Removed template {args.template_name}", "green"))
 
 
 # fmt: off

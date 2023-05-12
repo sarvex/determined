@@ -263,7 +263,7 @@ def _test_rng_restore(fixture: str, metrics: list, tf2: Union[None, bool] = None
     metrics get worse over time, or by configuring the experiment to keep all
     checkpoints).
     """
-    config_base = conf.load_config(conf.fixtures_path(fixture + "/const.yaml"))
+    config_base = conf.load_config(conf.fixtures_path(f"{fixture}/const.yaml"))
     config = copy.deepcopy(config_base)
     if tf2 is not None:
         config = conf.set_tf2_image(config) if tf2 else conf.set_tf1_image(config)

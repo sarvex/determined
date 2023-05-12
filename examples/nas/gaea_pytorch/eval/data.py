@@ -20,18 +20,16 @@ def load_image(path):
 def list_blobs(storage_client, bucket_name, prefix=None):
     # Helper functions for GCP from https://cloud.google.com/storage/docs/listing-objects#code-samples
     """Lists all the blobs in the bucket."""
-    blobs = storage_client.list_blobs(bucket_name, prefix=prefix)
-    return blobs
+    return storage_client.list_blobs(bucket_name, prefix=prefix)
 
 
 def create_file_dirs(target_path):
-    destination_dir = target_path[0 : target_path.rfind("/")]
+    destination_dir = target_path[:target_path.rfind("/")]
     if not os.path.exists(destination_dir):
         try:
             os.makedirs(destination_dir)
         except:
             assert os.path.exists(destination_dir)
-            pass
 
 
 class ImageNetDataset(Dataset):
@@ -46,7 +44,7 @@ class ImageNetDataset(Dataset):
         assert split in [
             "train",
             "validation",
-        ], "split {} not in (train, validation)".format(split)
+        ], f"split {split} not in (train, validation)"
         self._split = split
 
         # If bucket name is None, we will generate random data.
@@ -86,13 +84,11 @@ class ImageNetDataset(Dataset):
                     self._subdir_to_class[sub_dir] = class_count
                     class_count += 1
                 self._labels.append(self._subdir_to_class[sub_dir])
-            print("There are {} records in dataset.".format(len(self._imgs_paths)))
+            print(f"There are {len(self._imgs_paths)} records in dataset.")
 
     def __len__(self):
         # Return some length if using randomly generated data.
-        if self._bucket_name is None:
-            return 1024 * 100
-        return len(self._imgs_paths)
+        return 1024 * 100 if self._bucket_name is None else len(self._imgs_paths)
 
     def __getitem__(self, idx):
         # Generate random data if a bucket name is not provided.

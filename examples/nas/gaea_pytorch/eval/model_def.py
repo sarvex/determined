@@ -107,8 +107,7 @@ class GAEAEvalTrial(PyTorchTrial):
             drop_prob=self.context.get_hparam("drop_prob"),
         )
 
-        ema_model = EMAWrapper(self.context.get_hparam("ema_decay"), model)
-        return ema_model
+        return EMAWrapper(self.context.get_hparam("ema_decay"), model)
 
     def build_lr_scheduler_from_config(self, optimizer):
         if self.context.get_hparam("lr_scheduler") == "cosine":
@@ -169,14 +168,13 @@ class GAEAEvalTrial(PyTorchTrial):
             transform=train_transforms,
         )
 
-        train_queue = DataLoader(
+        return DataLoader(
             train_data,
             batch_size=self.context.get_per_slot_batch_size(),
             shuffle=True,
             pin_memory=True,
             num_workers=self.data_config["num_workers_train"],
         )
-        return train_queue
 
     def build_validation_data_loader(self) -> DataLoader:
         bucket_name = self.data_config["bucket_name"]
@@ -199,14 +197,13 @@ class GAEAEvalTrial(PyTorchTrial):
             ),
         )
 
-        valid_queue = DataLoader(
+        return DataLoader(
             valid_data,
             batch_size=self.context.get_per_slot_batch_size(),
             shuffle=False,
             pin_memory=True,
             num_workers=self.data_config["num_workers_val"],
         )
-        return valid_queue
 
     def train_batch(
         self, batch: Any, epoch_idx: int, batch_idx: int
@@ -217,7 +214,7 @@ class GAEAEvalTrial(PyTorchTrial):
 
         if batch_idx == 0 or self.last_epoch_idx < epoch_idx:
             current_lr = self.lr_scheduler.get_last_lr()[0]
-            print("Epoch: {} lr {}".format(epoch_idx, current_lr))
+            print(f"Epoch: {epoch_idx} lr {current_lr}")
         self.last_epoch_idx = epoch_idx
 
         input, target = batch

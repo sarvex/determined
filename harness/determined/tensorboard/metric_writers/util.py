@@ -22,7 +22,8 @@ def is_numerical_scalar(n: Any) -> bool:
     if isinstance(n, np.number):
         return True
 
-    if isinstance(n, np.ndarray) and n.ndim == 0 and np.issubdtype(n.dtype, np.number):
-        return True
-
-    return False
+    return bool(
+        isinstance(n, np.ndarray)
+        and n.ndim == 0
+        and np.issubdtype(n.dtype, np.number)
+    )

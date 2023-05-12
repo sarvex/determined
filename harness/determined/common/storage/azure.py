@@ -35,7 +35,7 @@ class AzureStorageManager(StorageManager):
         files.
         """
         try:
-            logging.info("Uploading checkpoint {} to Azure Blob Storage.".format(storage_id))
+            logging.info(f"Uploading checkpoint {storage_id} to Azure Blob Storage.")
             self.upload(metadata, storage_dir)
         finally:
             self._remove_checkpoint_directory(metadata.storage_id)
@@ -46,7 +46,7 @@ class AzureStorageManager(StorageManager):
         os.makedirs(storage_dir, exist_ok=True)
 
         logging.info(
-            "Downloading checkpoint {} from Azure Blob Storage".format(metadata.storage_id)
+            f"Downloading checkpoint {metadata.storage_id} from Azure Blob Storage"
         )
         self.download(metadata, storage_dir)
 
@@ -59,15 +59,13 @@ class AzureStorageManager(StorageManager):
     def upload(self, metadata: StorageMetadata, storage_dir: str) -> None:
         for rel_path in metadata.resources.keys():
             if not rel_path.endswith("/"):
-                rel_path_parent = (
-                    "{}/{}".format(metadata.storage_id, "/".join(rel_path.split("/")[:-1]))
-                ).rstrip("/")
-                container_name = "{}/{}".format(self.container, rel_path_parent)
+                rel_path_parent = f'{metadata.storage_id}/{"/".join(rel_path.split("/")[:-1])}'.rstrip(
+                    "/"
+                )
+                container_name = f"{self.container}/{rel_path_parent}"
                 blob_name = rel_path.split("/")[-1]
                 abs_path = os.path.join(storage_dir, rel_path)
-                logging.debug(
-                    "Uploading blob {} to container {}.".format(blob_name, container_name)
-                )
+                logging.debug(f"Uploading blob {blob_name} to container {container_name}.")
                 self.client.put(container_name, blob_name, abs_path)
 
     @util.preserve_random_state
@@ -81,21 +79,21 @@ class AzureStorageManager(StorageManager):
             if rel_path.endswith("/"):
                 continue
 
-            rel_path_parent = (
-                "{}/{}".format(metadata.storage_id, "/".join(rel_path.split("/")[:-1]))
-            ).rstrip("/")
-            container_name = "{}/{}".format(self.container, rel_path_parent)
-            blob_name = rel_path.split("/")[-1]
-            logging.debug(
-                "Downloading blob {} from container {}.".format(blob_name, container_name)
+            rel_path_parent = f'{metadata.storage_id}/{"/".join(rel_path.split("/")[:-1])}'.rstrip(
+                "/"
             )
+            container_name = f"{self.container}/{rel_path_parent}"
+            blob_name = rel_path.split("/")[-1]
+            logging.debug(f"Downloading blob {blob_name} from container {container_name}.")
             self.client.get(container_name, blob_name, abs_path)
 
     @util.preserve_random_state
     def delete(self, metadata: StorageMetadata) -> None:
-        logging.info("Deleting checkpoint {} from Azure Blob Storage".format(metadata.storage_id))
+        logging.info(
+            f"Deleting checkpoint {metadata.storage_id} from Azure Blob Storage"
+        )
         files = [
-            "{}/{}".format(metadata.storage_id, rel_path)
+            f"{metadata.storage_id}/{rel_path}"
             for rel_path in metadata.resources.keys()
             if not rel_path.endswith("/")
         ]

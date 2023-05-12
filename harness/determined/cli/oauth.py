@@ -31,14 +31,14 @@ def add_client(parsed_args: Namespace) -> None:
         ).json()
     except api.errors.NotFoundException:
         raise EnterpriseOnlyError("API not found: oauth2/clients")
-    print("Client ID:     {}".format(client["id"]))
-    print("Client secret: {}".format(client["secret"]))
+    print(f'Client ID:     {client["id"]}')
+    print(f'Client secret: {client["secret"]}')
 
 
 @authentication.required
 def remove_client(parsed_args: Namespace) -> None:
     try:
-        api.delete(parsed_args.master, "oauth2/clients/{}".format(parsed_args.client_id))
+        api.delete(parsed_args.master, f"oauth2/clients/{parsed_args.client_id}")
     except api.errors.NotFoundException:
         raise EnterpriseOnlyError("API not found: oauth2/clients")
 

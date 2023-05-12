@@ -130,7 +130,7 @@ class Determined:
         Get the :class:`~determined.experimental.Checkpoint` representing the
         checkpoint with the provided UUID.
         """
-        r = self._session.get("/api/v1/checkpoints/{}".format(uuid)).json()
+        r = self._session.get(f"/api/v1/checkpoints/{uuid}").json()
         return checkpoint.Checkpoint.from_json(r["checkpoint"], self._session)
 
     def create_model(
@@ -145,7 +145,7 @@ class Determined:
             metadata (dict, optional): Dictionary of metadata to add to the model.
         """
         r = self._session.post(
-            "/api/v1/models/{}".format(name),
+            f"/api/v1/models/{name}",
             body={"description": description, "metadata": metadata},
         )
 
@@ -157,7 +157,7 @@ class Determined:
         with the provided name. If no model with that name is found in the registry,
         an exception is raised.
         """
-        r = self._session.get("/api/v1/models/{}".format(name))
+        r = self._session.get(f"/api/v1/models/{name}")
         return model.Model.from_json(r.json().get("model"), self._session)
 
     def get_models(

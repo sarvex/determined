@@ -100,16 +100,14 @@ class PynvmlWrapper:
         self._pynvml = cast(Any, self._pynvml)
 
         handle = self._pynvml.nvmlDeviceGetHandleByIndex(index)
-        free_memory = self._pynvml.nvmlDeviceGetMemoryInfo(handle).free  # type: float
-        return free_memory
+        return self._pynvml.nvmlDeviceGetMemoryInfo(handle).free
 
     def nvml_get_gpu_utilization_by_index(self, index: int) -> float:
         self._safety_check()
         self._pynvml = cast(Any, self._pynvml)
 
         handle = self._pynvml.nvmlDeviceGetHandleByIndex(index)
-        gpu_util = self._pynvml.nvmlDeviceGetUtilizationRates(handle).gpu  # type: float
-        return gpu_util
+        return self._pynvml.nvmlDeviceGetUtilizationRates(handle).gpu
 
 
 class MetricType(Enum):
@@ -395,9 +393,7 @@ class ProfilerAgent:
         """
         Is the ProfilingAgent actively collecting data and shipping to the API?
         """
-        if not self.is_enabled:
-            return False
-        return self.has_started and not self.has_finished
+        return self.has_started and not self.has_finished if self.is_enabled else False
 
     def update_batch_idx(self, new_batch_idx: int) -> None:
         if not self.is_enabled:
@@ -614,15 +610,12 @@ class SysMetricCollectorThread(threading.Thread):
                 sleep_time = next_collection - now
                 # a negative timeout will lead to an exception when retrieving from the queue
                 sleep_time = max(sleep_time, 0)
-                try:
+                with contextlib.suppress(queue.Empty):
                     msg = self.control_queue.get(timeout=sleep_time)
                     if isinstance(msg, ShutdownMessage):
                         self.send_queue.put(self.current_batch.consume())
                         self.send_queue.put(ShutdownMessage())
                         return
-                except queue.Empty:
-                    pass
-
             next_collection += self.MEASUREMENT_INTERVAL
 
             cpu_util = cpu_util_collector.measure(self.current_batch_idx)
@@ -710,10 +703,6 @@ class MetricsBatcherThread(threading.Thread):
             if isinstance(msg, ShutdownMessage):
                 self.send_queue.put(ShutdownMessage())
                 return
-            else:
-                # Ignore any Timings that are received before StartMessage
-                pass
-
         batch_start_time = None  # type: Optional[float]
         while True:
             # Wait for the next Timing to arrive. If it doesn't arrive before the next flush
@@ -723,7 +712,7 @@ class MetricsBatcherThread(threading.Thread):
                 time_since_flush = time.time() - batch_start_time
                 timeout = self.FLUSH_INTERVAL - time_since_flush
 
-            try:
+            with contextlib.suppress(queue.Empty):
                 message = self.inbound_queue.get(timeout=timeout)
                 if isinstance(message, ShutdownMessage):
                     self.send_queue.put(self.metrics_batch.consume())
@@ -740,9 +729,6 @@ class MetricsBatcherThread(threading.Thread):
                         f"inbound_queue. This should never happen - there must "
                         f"be a bug in the code."
                     )
-
-            except queue.Empty:
-                pass
 
             check.is_not_none(
                 batch_start_time,

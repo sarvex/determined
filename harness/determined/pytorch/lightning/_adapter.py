@@ -27,7 +27,6 @@ TorchData = Union[Dict[str, torch.Tensor], Sequence[torch.Tensor], torch.Tensor]
 
 
 def check_compatibility(lm: pl.LightningModule) -> None:
-    prefix = "Unsupported usage in LightningAdapter: "
     unsupported_members = {
         "backward",
         "get_progress_bar_dict",
@@ -61,21 +60,21 @@ def check_compatibility(lm: pl.LightningModule) -> None:
     )
 
     matches = unsupported_members & overridden_members
+    prefix = "Unsupported usage in LightningAdapter: "
     if len(matches) > 0:
-        raise InvalidModelException(prefix + f"{matches}")
+        raise InvalidModelException(f"{prefix}{matches}")
 
     for member in overridden_members:
         if has_param(getattr(lm, member), "dataloader_idx"):
             raise InvalidModelException(
-                prefix
-                + f'multiple dataloaders and `dataloader_idx` are not supported in "{member}"'
+                f'{prefix}multiple dataloaders and `dataloader_idx` are not supported in "{member}"'
             )
 
     if has_param(lm.training_step, "hiddens", 4):
-        raise InvalidModelException(prefix + '`hiddens` argument in "training_step"')
+        raise InvalidModelException(f'{prefix}`hiddens` argument in "training_step"')
 
     if lm.trainer is not None:
-        raise InvalidModelException(prefix + "Lightning Trainer")
+        raise InvalidModelException(f"{prefix}Lightning Trainer")
 
 
 def override_unsupported_nud(lm: pl.LightningModule, context: PyTorchTrialContext) -> None:
@@ -86,12 +85,12 @@ def override_unsupported_nud(lm: pl.LightningModule, context: PyTorchTrialContex
             print(*args, **kwargs)
 
     def lm_log_dict(a_dict: Dict, *args: Any, **kwargs: Any) -> None:
-        if len(args) != 0 or len(kwargs) != 0:
+        if args or kwargs:
             raise InvalidModelException(
                 f"unsupported arguments to LightningModule.log {args} {kwargs}"
             )
         for metric, value in a_dict.items():
-            if type(value) == int or type(value) == float:
+            if type(value) in [int, float]:
                 writer.add_scalar(metric, value, context.current_train_batch())
 
     def lm_log(name: str, value: Any, *args: Any, **kwargs: Any) -> None:
@@ -399,12 +398,11 @@ class LightningAdapter(PyTorchTrial):
 
         metrics = None
         if rv is None:
-            metrics = {}
+            return {}
         elif not isinstance(rv, dict):
-            metrics = {"loss": rv}
+            return {"loss": rv}
         else:
-            metrics = rv
-        return metrics
+            return rv
 
     @abstractmethod
     def build_training_data_loader(self) -> DataLoader:

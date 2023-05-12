@@ -26,7 +26,7 @@ class BatchMetricWriter(callback.Callback):
         if not util.is_numerical_scalar(metric_val):
             return
 
-        self.writer.add_scalar("Determined/" + metric_key, metric_val, step)
+        self.writer.add_scalar(f"Determined/{metric_key}", metric_val, step)
 
     def on_train_step_end(
         self,
@@ -60,7 +60,7 @@ class BatchMetricWriter(callback.Callback):
     ) -> None:
         for name, value in metrics.items():
             if not name.startswith("val"):
-                name = "val_" + name
+                name = f"val_{name}"
             self._maybe_write_metric(name, value, total_batches_processed)
 
         self.writer.reset()

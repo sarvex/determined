@@ -46,14 +46,14 @@ def start_shell(args: Namespace) -> None:
         return
 
     ready = False
-    with api.ws(args.master, "shells/{}/events".format(resp["id"])) as ws:
+    with api.ws(args.master, f'shells/{resp["id"]}/events') as ws:
         for msg in ws:
             if msg["service_ready_event"]:
                 ready = True
                 break
             render_event_stream(msg)
     if ready:
-        shell = api.get(args.master, "api/v1/shells/{}".format(resp["id"])).json()["shell"]
+        shell = api.get(args.master, f'api/v1/shells/{resp["id"]}').json()["shell"]
         check_eq(shell["state"], "STATE_RUNNING", "Shell must be in a running state")
         _open_shell(
             args.master,
@@ -66,7 +66,7 @@ def start_shell(args: Namespace) -> None:
 
 @authentication.required
 def open_shell(args: Namespace) -> None:
-    shell = api.get(args.master, "api/v1/shells/{}".format(args.shell_id)).json()["shell"]
+    shell = api.get(args.master, f"api/v1/shells/{args.shell_id}").json()["shell"]
     check_eq(shell["state"], "STATE_RUNNING", "Shell must be in a running state")
     _open_shell(
         args.master,
@@ -79,7 +79,7 @@ def open_shell(args: Namespace) -> None:
 
 @authentication.required
 def show_ssh_command(args: Namespace) -> None:
-    shell = api.get(args.master, "api/v1/shells/{}".format(args.shell_id)).json()["shell"]
+    shell = api.get(args.master, f"api/v1/shells/{args.shell_id}").json()["shell"]
     check_eq(shell["state"], "STATE_RUNNING", "Shell must be in a running state")
     _open_shell(args.master, shell, args.ssh_opts, retain_keys_and_print=True, print_only=True)
 
@@ -130,23 +130,23 @@ def _open_shell(
         # Use determined.cli.tunnel as a portable script for using the HTTP CONNECT mechanism,
         # similar to `nc -X CONNECT -x ...` but without any dependency on external binaries.
         python = sys.executable
-        proxy_cmd = "{} -m determined.cli.tunnel {} %h".format(python, master)
+        proxy_cmd = f"{python} -m determined.cli.tunnel {master} %h"
 
         cert_bundle_path = _prepare_cert_bundle(cache_dir)
         if cert_bundle_path is not None:
-            proxy_cmd += ' --cert-file "{}"'.format(cert_bundle_path)
+            proxy_cmd += f' --cert-file "{cert_bundle_path}"'
 
         cert = certs.cli_cert
         assert cert is not None, "cli_cert was not configured"
         if cert.name:
-            proxy_cmd += ' --cert-name "{}"'.format(cert.name)
+            proxy_cmd += f' --cert-name "{cert.name}"'
 
         username = shell["agentUserGroup"]["user"] or "root"
 
         cmd = [
             "ssh",
             "-o",
-            "ProxyCommand={}".format(proxy_cmd),
+            f"ProxyCommand={proxy_cmd}",
             "-o",
             "StrictHostKeyChecking=no",
             "-tt",
@@ -156,7 +156,7 @@ def _open_shell(
             str(keyfile.name),
             "-p",
             str(port),
-            "{}@{}".format(username, shell["id"]),
+            f'{username}@{shell["id"]}',
             *additional_opts,
         ]
 
@@ -167,7 +167,7 @@ def _open_shell(
 
         subprocess.run(cmd)
 
-        print(colored("To reconnect, run: det shell open {}".format(shell["id"]), "green"))
+        print(colored(f'To reconnect, run: det shell open {shell["id"]}', "green"))
 
 
 # fmt: off

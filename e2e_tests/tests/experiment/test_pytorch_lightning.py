@@ -7,7 +7,7 @@ from tests import experiment as exp
 @pytest.mark.e2e_cpu  # type: ignore
 def test_pl_mnist() -> None:
     exp_dir = "mnist_pl"
-    config = conf.load_config(conf.cv_examples_path(exp_dir + "/const.yaml"))
+    config = conf.load_config(conf.cv_examples_path(f"{exp_dir}/const.yaml"))
     config = conf.set_max_length(config, {"batches": 200})
     config = conf.set_tf2_image(config)
 
@@ -17,7 +17,7 @@ def test_pl_mnist() -> None:
 @pytest.mark.e2e_cpu  # type: ignore
 def test_pl_mnist_gan() -> None:
     exp_dir = "gan_mnist_pl"
-    config = conf.load_config(conf.gan_examples_path(exp_dir + "/const.yaml"))
+    config = conf.load_config(conf.gan_examples_path(f"{exp_dir}/const.yaml"))
     config = conf.set_max_length(config, {"batches": 200})
     config = conf.set_tf2_image(config)
 
@@ -29,7 +29,9 @@ def test_pl_mnist_gan() -> None:
 @pytest.mark.parametrize("api_style", ["apex", "auto"])  # type: ignore
 def test_pl_const_with_amp(api_style: str) -> None:
     dir_name = "pytorch_lightning_amp"
-    config = conf.load_config(conf.fixtures_path(dir_name + "/" + api_style + "_amp.yaml"))
+    config = conf.load_config(
+        conf.fixtures_path(f"{dir_name}/{api_style}_amp.yaml")
+    )
     config = conf.set_max_length(config, {"batches": 200})
     config = conf.set_tf2_image(config)
 

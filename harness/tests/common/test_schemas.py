@@ -17,9 +17,8 @@ def strip_runtime_defaultable(obj: Any, defaulted: Any) -> Any:
     if defaulted is None or obj is None:
         return obj
 
-    if isinstance(defaulted, str):
-        if defaulted == "*":
-            return "*"
+    if isinstance(defaulted, str) and defaulted == "*":
+        return "*"
 
     # Recurse through dicts.
     if isinstance(defaulted, dict):
@@ -48,7 +47,7 @@ def class_from_url(url: str) -> Type[schemas.SchemaBase]:
     schema = expconf.get_schema(url)
     title = schema["title"]
 
-    cls = getattr(_v0, title + "V0")
+    cls = getattr(_v0, f"{title}V0")
     assert issubclass(cls, schemas.SchemaBase)
     return cls  # type: ignore
 
@@ -93,23 +92,19 @@ class Case:
         if not self.sane_as:
             return
         for url in self.sane_as:
-            errors = expconf.sanity_validation_errors(self.case, url)
-            if not errors:
-                continue
-            raise ValueError(f"'{self.name}' failed against {url}:\n - " + "\n - ".join(errors))
+            if errors := expconf.sanity_validation_errors(self.case, url):
+                raise ValueError(f"'{self.name}' failed against {url}:\n - " + "\n - ".join(errors))
 
     def run_completeness(self) -> None:
         if not self.complete_as:
             return
         for url in self.complete_as:
-            errors = expconf.completeness_validation_errors(self.case, url)
-            if not errors:
-                continue
-            raise ValueError(
-                ("'{}' failed completeness validation against {}:\n - " "\n - ")
-                .format(self.name, url)
-                .join(errors)
-            )
+            if errors := expconf.completeness_validation_errors(self.case, url):
+                raise ValueError(
+                    f"'{self.name}' failed completeness validation against {url}:\n - \n - ".join(
+                        errors
+                    )
+                )
 
     def run_sanity_errors(self) -> None:
         if not self.sanity_errors:
@@ -209,7 +204,7 @@ def all_cases() -> Iterator["str"]:
                     cases = yaml.safe_load(f)
                 for case in cases:
                     display_path = os.path.relpath(path, CASES_ROOT)
-                    yield display_path + "::" + case["name"]
+                    yield f"{display_path}::" + case["name"]
 
 
 @pytest.mark.parametrize("test_case", all_cases())  # type: ignore

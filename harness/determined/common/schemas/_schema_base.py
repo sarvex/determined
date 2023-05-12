@@ -88,9 +88,7 @@ def _remove_optional(anno: Any) -> Any:
     args = list(anno.__args__)
     if type(None) in args:
         args.remove(type(None))
-    if len(args) != 1:
-        return type(anno)(args)
-    return args[0]
+    return type(anno)(args) if len(args) != 1 else args[0]
 
 
 def _handle_unions(anno: type) -> type:
@@ -127,9 +125,7 @@ def _instance_from_annotation(anno: type, value: Any, prevalidated: bool = False
         return typ(value)
     if issubclass(typ, SchemaBase):
         # For subclasses of SchemaBase we just call either from_dict() or from_none().
-        if value is None:
-            return typ.from_none()
-        return typ.from_dict(value, prevalidated)
+        return typ.from_none() if value is None else typ.from_dict(value, prevalidated)
     if issubclass(typ, PRIMITIVE_JSON_TYPES):
         # For json literal types, we just include them directly.
         return value
@@ -188,8 +184,7 @@ class SchemaBase:
 
         # Validate before parsing.
         if not prevalidated:
-            errors = expconf.sanity_validation_errors(d, cls._id)
-            if errors:
+            if errors := expconf.sanity_validation_errors(d, cls._id):
                 raise TypeError(f"incorrect {cls.__name__}:\n" + "\n".join(errors))
 
         init_args = {}
@@ -280,19 +275,19 @@ class SchemaBase:
                 setattr(self, name, merged_value)
 
     def assert_sane(self) -> None:
-        errors = expconf.sanity_validation_errors(self.to_dict(), self._id)
-        if errors:
+        if errors := expconf.sanity_validation_errors(self.to_dict(), self._id):
             raise AssertionError(f"incorrect {type(self).__name__}:\n" + "\n".join(errors))
 
     def assert_complete(self) -> None:
-        errors = expconf.completeness_validation_errors(self.to_dict(), self._id)
-        if errors:
+        if errors := expconf.completeness_validation_errors(
+            self.to_dict(), self._id
+        ):
             raise TypeError(f"incorrect {type(self).__name__}:\n" + "\n".join(errors))
 
     def __eq__(self, other: object) -> bool:
         if type(self) != type(other):
             return False
-        for name in self.property_names():
-            if getattr(self, name) != getattr(other, name):
-                return False
-        return True
+        return all(
+            getattr(self, name) == getattr(other, name)
+            for name in self.property_names()
+        )

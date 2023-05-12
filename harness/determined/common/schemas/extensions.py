@@ -80,8 +80,9 @@ def union(
     valid = []
 
     for idx, item in enumerate(det_one_of["items"]):
-        errors = list(validator.descend(instance, schema=item, schema_path=idx))
-        if errors:
+        if errors := list(
+            validator.descend(instance, schema=item, schema_path=idx)
+        ):
             key = item["unionKey"]
             if not selected_errors and _evaluate_unionKey(key, instance):
                 selected_errors = errors
@@ -129,29 +130,23 @@ def _evaluate_unionKey(key: str, instance: Any) -> bool:
         if key == "const":
             # "const:NAME=VALUE" returns True when the instance has NAME and it evalutes to VALUE.
             name, value = arg.split("=", 1)
-            if not isinstance(instance, dict):
-                return False
-            return instance.get(name) == value
+            return False if not isinstance(instance, dict) else instance.get(name) == value
+        if key == "hasattr":
+            # hasattr:ATTR returns True when the instance has the attribute ATTR.
+            return isinstance(instance, dict) and arg in instance
 
-        if key == "singleproperty":
+        elif key == "singleproperty":
             # "singleproperty:ATTR" returns True when the instance has ATTR as its only key.
             if not isinstance(instance, dict):
                 return False
-            if len(instance) != 1:
-                return False
-            return arg in instance
-
-        if key == "type":
+            return False if len(instance) != 1 else arg in instance
+        elif key == "type":
             # "type:TYPE" returns True when the instance's json type is TYPE.
             assert arg in ["array", "object"]
             if arg == "array":
                 return isinstance(instance, list)
             if arg == "object":
                 return isinstance(instance, dict)
-
-        if key == "hasattr":
-            # hasattr:ATTR returns True when the instance has the attribute ATTR.
-            return isinstance(instance, dict) and arg in instance
 
     raise ValueError(f"invalid unionKey: {key}")
 
@@ -177,8 +172,7 @@ def checks(
         }
     """
     for msg, subschema in schema["checks"].items():
-        errors = list(validator.descend(instance, schema=subschema))
-        if errors:
+        if errors := list(validator.descend(instance, schema=subschema)):
             yield jsonschema.ValidationError(msg)
 
 
@@ -267,16 +261,15 @@ def conditional(
     unless = conditional.get("unless")
     enforce = conditional["enforce"]
 
-    if when is not None:
-        if list(validator.descend(instance, schema=when, schema_path="when")):
-            # "when" clause failed, return early.
-            return
-    else:
+    if when is None:
         assert unless is not None, "invalid schema"
         if not list(validator.descend(instance, schema=unless, schema_path="unless")):
             # "unless" clause passed, returned early.
             return
 
+    elif list(validator.descend(instance, schema=when, schema_path="when")):
+        # "when" clause failed, return early.
+        return
     # Enforce the "enforce" clause.
     yield from validator.descend(instance, schema=enforce, schema_path="enforce")
 

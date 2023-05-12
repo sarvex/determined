@@ -107,6 +107,4 @@ class DeterminedDeployment(metaclass=abc.ABCMeta):
         master_port = output[constants.cloudformation.MASTER_PORT]
         master_scheme = output[constants.cloudformation.MASTER_SCHEME]
 
-        master_url = f"{master_scheme}://{master_ip}:{master_port}"
-
-        return master_url
+        return f"{master_scheme}://{master_ip}:{master_port}"

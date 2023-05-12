@@ -54,15 +54,15 @@ test_pipeline = [
 ]
 data = dict(
     train=dict(
-        proposal_file=data_root + "proposals/ga_rpn_r50_fpn_1x_train2017.pkl",
+        proposal_file=f"{data_root}proposals/ga_rpn_r50_fpn_1x_train2017.pkl",
         pipeline=train_pipeline,
     ),
     val=dict(
-        proposal_file=data_root + "proposals/ga_rpn_r50_fpn_1x_val2017.pkl",
+        proposal_file=f"{data_root}proposals/ga_rpn_r50_fpn_1x_val2017.pkl",
         pipeline=test_pipeline,
     ),
     test=dict(
-        proposal_file=data_root + "proposals/ga_rpn_r50_fpn_1x_val2017.pkl",
+        proposal_file=f"{data_root}proposals/ga_rpn_r50_fpn_1x_val2017.pkl",
         pipeline=test_pipeline,
     ),
 )

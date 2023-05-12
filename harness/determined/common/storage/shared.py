@@ -39,7 +39,7 @@ class SharedFSStorageManager(StorageManager):
     @classmethod
     def from_config(cls, config: Dict[str, Any], container_path: Optional[str]) -> "StorageManager":
         allowed_keys = {"host_path", "storage_path", "container_path", "propagation"}
-        for key in config.keys():
+        for key in config:
             check.is_in(key, allowed_keys, "extra key in shared_fs config")
         check.is_in("host_path", config, "shared_fs config is missing host_path")
         # Ignore legacy configuration values propagation and container_path.
@@ -57,11 +57,10 @@ class SharedFSStorageManager(StorageManager):
         storage_dir = os.path.join(self._base_path, metadata.storage_id)
         check.true(
             os.path.exists(storage_dir),
-            "Storage directory does not exist: {}. Please verify "
-            "that you are using the correct configuration value for "
-            "checkpoint_storage.host_path".format(storage_dir),
+            f"Storage directory does not exist: {storage_dir}. Please verify that you are using the correct configuration value for checkpoint_storage.host_path",
         )
         check.true(
-            os.path.isdir(storage_dir), "Checkpoint path is not a directory: {}".format(storage_dir)
+            os.path.isdir(storage_dir),
+            f"Checkpoint path is not a directory: {storage_dir}",
         )
         yield storage_dir

@@ -75,7 +75,7 @@ def load_config(config_path: str) -> Any:
 
 
 def make_master_url(suffix: str = "") -> str:
-    return "{}://{}:{}/{}".format(MASTER_SCHEME, MASTER_IP, MASTER_PORT, suffix)
+    return f"{MASTER_SCHEME}://{MASTER_IP}:{MASTER_PORT}/{suffix}"
 
 
 def set_global_batch_size(config: Dict[Any, Any], batch_size: int) -> Dict[Any, Any]:
@@ -144,17 +144,17 @@ def set_tf2_image(config: Dict[Any, Any]) -> Dict[Any, Any]:
 
 def set_shared_fs_data_layer(config: Dict[Any, Any]) -> Dict[Any, Any]:
     config = config.copy()
-    config["data_layer"] = {}
-    config["data_layer"]["type"] = "shared_fs"
+    config["data_layer"] = {"type": "shared_fs"}
     return config
 
 
 def set_s3_data_layer(config: Dict[Any, Any]) -> Dict[Any, Any]:
     config = config.copy()
-    config["data_layer"] = {}
-    config["data_layer"]["type"] = "s3"
-    config["data_layer"]["bucket"] = "yogadl-test"
-    config["data_layer"]["bucket_directory_path"] = "pedl_integration_tests"
+    config["data_layer"] = {
+        "type": "s3",
+        "bucket": "yogadl-test",
+        "bucket_directory_path": "pedl_integration_tests",
+    }
     return config
 
 

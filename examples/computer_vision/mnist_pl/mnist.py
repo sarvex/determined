@@ -76,8 +76,7 @@ class LitMNIST(pl.LightningModule):
         return {'val_loss': loss, 'accuracy': acc}
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        return optimizer
+        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
 
 
 if __name__ == '__main__':

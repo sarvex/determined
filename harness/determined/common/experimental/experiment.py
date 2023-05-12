@@ -160,14 +160,12 @@ class ExperimentReference:
                 this parameter is ignored. By default, the value of ``smaller_is_better``
                 from the experiment's configuration is used.
         """
-        checkpoints = self.top_n_checkpoints(
+        if checkpoints := self.top_n_checkpoints(
             1, sort_by=sort_by, smaller_is_better=smaller_is_better
-        )
-
-        if not checkpoints:
-            raise AssertionError("No checkpoints found for experiment {}".format(self.id))
-
-        return checkpoints[0]
+        ):
+            return checkpoints[0]
+        else:
+            raise AssertionError(f"No checkpoints found for experiment {self.id}")
 
     def top_n_checkpoints(
         self,
@@ -196,7 +194,7 @@ class ExperimentReference:
                 from the experiment's configuration is used.
         """
         r = self._session.get(
-            "/api/v1/experiments/{}/checkpoints".format(self.id),
+            f"/api/v1/experiments/{self.id}/checkpoints",
             params={
                 "states": checkpoint.CheckpointState.COMPLETED.value,
                 "validation_states": checkpoint.CheckpointState.COMPLETED.value,
@@ -205,7 +203,7 @@ class ExperimentReference:
         checkpoints = r.json()["checkpoints"]
 
         if not checkpoints:
-            raise AssertionError("No checkpoint found for experiment {}".format(self.id))
+            raise AssertionError(f"No checkpoint found for experiment {self.id}")
 
         if not sort_by:
             sort_by = checkpoints[0]["experimentConfig"]["searcher"]["metric"]
@@ -227,4 +225,4 @@ class ExperimentReference:
         return checkpoint_refs[:limit]
 
     def __repr__(self) -> str:
-        return "Experiment(id={})".format(self.id)
+        return f"Experiment(id={self.id})"

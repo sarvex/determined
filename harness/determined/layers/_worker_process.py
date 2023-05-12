@@ -153,11 +153,7 @@ class SubprocessLauncher:
             load_path=self.load_path,
         )
         self._worker_process_env_path = pathlib.Path(
-            "{}-{}-{}".format(
-                constants.TRAIN_PROCESS_ENVIRONMENT_VARIABLE_PATH,
-                self.env.det_experiment_id,
-                self.env.det_trial_id,
-            )
+            f"{constants.TRAIN_PROCESS_ENVIRONMENT_VARIABLE_PATH}-{self.env.det_experiment_id}-{self.env.det_trial_id}"
         )
         worker_process_env.to_file(self._worker_process_env_path)
 

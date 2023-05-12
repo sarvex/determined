@@ -27,9 +27,7 @@ class ContextItem:
 
     @property
     def size(self) -> int:
-        if self.content:
-            return len(self.content)
-        return 0
+        return len(self.content) if self.content else 0
 
     def dict(self) -> Dict[str, Any]:
         d = {"path": self.path, "type": self.type, "uid": self.uid, "gid": self.gid}
@@ -110,10 +108,10 @@ class Context:
         local_path = local_path.resolve()
 
         if not local_path.exists():
-            raise Exception("Path '{}' doesn't exist".format(local_path))
+            raise Exception(f"Path '{local_path}' doesn't exist")
 
         if local_path.is_file():
-            raise ValueError("Path '{}' must be a directory".format(local_path))
+            raise ValueError(f"Path '{local_path}' must be a directory")
 
         root_path = local_path
 
@@ -124,9 +122,7 @@ class Context:
                 ignore.extend(detignore_file)
         ignore_spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, ignore)
 
-        msg = "Preparing files (in {}) to send to master... {} and {} files".format(
-            root_path, sizeof_fmt(0), 0
-        )
+        msg = f"Preparing files (in {root_path}) to send to master... {sizeof_fmt(0)} and 0 files"
         print(msg, end="\r", flush=True)
 
         # We could use pathlib.Path.rglob for scanning the directory;
@@ -138,7 +134,7 @@ class Context:
                 dir_rel_path = dir_path.relative_to(root_path)
 
                 # If the file matches any path specified in .detignore, then ignore it.
-                if ignore_spec.match_file(str(dir_rel_path) + "/"):
+                if ignore_spec.match_file(f"{str(dir_rel_path)}/"):
                     continue
 
                 # Determined only supports POSIX-style file paths.  Use as_posix() in case this code
@@ -165,24 +161,18 @@ class Context:
                 try:
                     entry = ContextItem.from_local_file(entry_path, file_path)
                 except OSError:
-                    print("Error reading '{}', skipping this file.".format(entry_path))
+                    print(f"Error reading '{entry_path}', skipping this file.")
                     continue
 
                 context.add_item(entry)
                 if context.size > limit:
                     print()
                     raise ValueError(
-                        "Directory '{}' exceeds the maximum allowed size {}.\n"
-                        "Consider using a .detignore file to specify that certain files "
-                        "or directories should be omitted from the model.".format(
-                            root_path, sizeof_fmt(constants.MAX_CONTEXT_SIZE)
-                        )
+                        f"Directory '{root_path}' exceeds the maximum allowed size {sizeof_fmt(constants.MAX_CONTEXT_SIZE)}.\nConsider using a .detignore file to specify that certain files or directories should be omitted from the model."
                     )
 
                 print(" " * len(msg), end="\r")
-                msg = "Preparing files ({}) to send to master... {} and {} files".format(
-                    root_path, sizeof_fmt(context.size), len(context)
-                )
+                msg = f"Preparing files ({root_path}) to send to master... {sizeof_fmt(context.size)} and {len(context)} files"
                 print(msg, end="\r", flush=True)
         print()
         return context
@@ -203,7 +193,9 @@ def read_single_file(file_path: Optional[pathlib.Path]) -> Tuple[bytes, int]:
     if not file_path:
         return b"", 0
 
-    check.check_true(file_path.is_file(), 'The file at "{}" could not be found'.format(file_path))
+    check.check_true(
+        file_path.is_file(), f'The file at "{file_path}" could not be found'
+    )
 
     content = file_path.read_bytes()
 

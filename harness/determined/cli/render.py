@@ -45,7 +45,7 @@ def render_objects(
 ) -> None:
     keys = inspect.getfullargspec(generic).args[1:]
     headers = [key.replace("_", " ").title() for key in keys]
-    if len(headers) == 0:
+    if not headers:
         raise ValueError("must have at least one header to display")
 
     def _coerce(r: Any) -> Iterable[Any]:
@@ -83,24 +83,15 @@ def format_time(datetime_str: Optional[str]) -> Optional[str]:
 
 
 def format_percent(f: Optional[float]) -> Optional[str]:
-    if f is None:
-        return None
-
-    return "{:.1%}".format(f)
+    return None if f is None else "{:.1%}".format(f)
 
 
 def format_resource_sizes(resources: Optional[Dict[str, int]]) -> str:
-    if resources is None:
-        return ""
-    else:
-        return util.sizeof_fmt(sum(resources.values()))
+    return "" if resources is None else util.sizeof_fmt(sum(resources.values()))
 
 
 def format_resources(resources: Optional[Dict[str, int]]) -> str:
-    if resources is None:
-        return ""
-    else:
-        return "\n".join(sorted(resources.keys()))
+    return "" if resources is None else "\n".join(sorted(resources.keys()))
 
 
 def tabulate_or_csv(
@@ -124,15 +115,13 @@ def yes_or_no(prompt: str) -> bool:
     no = ("n", "no")
     try:
         while True:
-            choice = input(prompt + " [{}/{}]: ".format(yes[0], no[0])).strip().lower()
+            choice = input(f"{prompt} [{yes[0]}/{no[0]}]: ").strip().lower()
             if choice in yes:
                 return True
             if choice in no:
                 return False
             print(
-                "Please respond with {} or {}".format(
-                    "/".join("'{}'".format(y) for y in yes), "/".join("'{}'".format(n) for n in no)
-                )
+                f"""Please respond with {"/".join(f"'{y}'" for y in yes)} or {"/".join(f"'{n}'" for n in no)}"""
             )
     except KeyboardInterrupt:
         # Add a newline to mimic a return when sending normal inputs.

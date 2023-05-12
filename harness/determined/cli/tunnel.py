@@ -47,10 +47,10 @@ def copy_to_websocket(
 
     try:
         while True:
-            chunk = f.read(4096)
-            if not chunk:
+            if chunk := f.read(4096):
+                ws.send_binary(chunk)
+            else:
                 break
-            ws.send_binary(chunk)
     finally:
         f.close()
         ws.close()
@@ -76,7 +76,7 @@ def copy_from_websocket(
                 event,
                 (lomond.events.ConnectFail, lomond.events.Rejected, lomond.events.ProtocolError),
             ):
-                raise Exception("Connection failed: {}".format(event))
+                raise Exception(f"Connection failed: {event}")
             elif isinstance(event, (lomond.events.Closing, lomond.events.Disconnected)):
                 break
     finally:
@@ -87,8 +87,10 @@ def http_connect_tunnel(
     master: str, service: str, cert_file: Optional[str], cert_name: Optional[str]
 ) -> None:
     parsed_master = request.parse_master_address(master)
-    assert parsed_master.hostname is not None, "Failed to parse master address: {}".format(master)
-    url = request.make_url(master, "proxy/{}/".format(service))
+    assert (
+        parsed_master.hostname is not None
+    ), f"Failed to parse master address: {master}"
+    url = request.make_url(master, f"proxy/{service}/")
     ws = lomond.WebSocket(request.maybe_upgrade_ws_scheme(url))
 
     # We can't send data to the WebSocket before the connection becomes ready, which takes a bit of

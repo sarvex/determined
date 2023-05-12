@@ -164,10 +164,7 @@ class NetworkImageNet(nn.Module):
             C_prev_prev, C_prev = C_prev, cell.multiplier * C_curr
 
             if self._do_SE and i <= layers * 2 / 3:
-                if C_curr == C:
-                    reduction_factor_SE = 4
-                else:
-                    reduction_factor_SE = 8
+                reduction_factor_SE = 4 if C_curr == C else 8
                 self.cells_SE += [
                     SqueezeAndExcitation(
                         C_curr * 4,
@@ -201,9 +198,8 @@ class NetworkImageNet(nn.Module):
             s0, s1 = s1, cell(s0, s1, self._drop_path_prob)
             if self._do_SE and i <= len(self.cells) * 2 / 3:
                 s1 = self.cells_SE[i](s1)
-            if i == 2 * self._layers // 3:
-                if self._auxiliary and self.training:
-                    logits_aux = self.auxiliary_head(s1)
+            if i == 2 * self._layers // 3 and self._auxiliary and self.training:
+                logits_aux = self.auxiliary_head(s1)
         out = self.global_pooling(s1)
         logits = self.classifier(out.contiguous().view(out.size(0), -1))
         return logits, logits_aux

@@ -15,13 +15,13 @@ from determined.common.api import request as req
 
 
 def patch_experiment_v1(master_url: str, exp_id: int, patch_doc: Dict[str, Any]) -> None:
-    path = "/api/v1/experiments/{}".format(exp_id)
+    path = f"/api/v1/experiments/{exp_id}"
     headers = {"Content-Type": "application/merge-patch+json"}
     req.patch(master_url, path, body=patch_doc, headers=headers)
 
 
 def patch_experiment(master_url: str, exp_id: int, patch_doc: Dict[str, Any]) -> None:
-    path = "experiments/{}".format(exp_id)
+    path = f"experiments/{exp_id}"
     headers = {"Content-Type": "application/merge-patch+json"}
     req.patch(master_url, path, body=patch_doc, headers=headers)
 
@@ -56,7 +56,7 @@ def trial_logs(
             "LOG_LEVEL_CRITICAL",
         ]
         try:
-            return levels[levels.index("LOG_LEVEL_" + level) :]
+            return levels[levels.index(f"LOG_LEVEL_{level}"):]
         except ValueError:
             raise Exception("invalid log level: {}".format(level))
 
@@ -104,8 +104,7 @@ def print_trial_logs(master_url: str, trial_id: int, **kwargs: Any) -> None:
     finally:
         print(
             colored(
-                "Trial log stream ended. To reopen log stream, run: "
-                "det trial logs -f {}".format(trial_id),
+                f"Trial log stream ended. To reopen log stream, run: det trial logs -f {trial_id}",
                 "green",
             )
         )
@@ -115,14 +114,14 @@ def follow_experiment_logs(master_url: str, exp_id: int) -> None:
     # Get the ID of this experiment's first trial (i.e., the one with the lowest ID).
     print("Waiting for first trial to begin...")
     while True:
-        r = api.get(master_url, "experiments/{}".format(exp_id))
+        r = api.get(master_url, f"experiments/{exp_id}")
         if len(r.json()["trials"]) > 0:
             break
         else:
             time.sleep(0.1)
 
     first_trial_id = sorted(t_id["id"] for t_id in r.json()["trials"])[0]
-    print("Following first trial with ID {}".format(first_trial_id))
+    print(f"Following first trial with ID {first_trial_id}")
     print_trial_logs(master_url, first_trial_id, follow=True)
 
 
@@ -148,7 +147,7 @@ def follow_test_experiment_logs(master_url: str, exp_id: int) -> None:
                 color = "white"
                 checkbox = " "
             print(colored(stage + (25 - len(stage)) * ".", color), end="")
-            print(colored(" [" + checkbox + "]", color), end="")
+            print(colored(f" [{checkbox}]", color), end="")
 
             if idx == len(stages) - 1:
                 print("\n" if ended else "\r", end="")
@@ -224,7 +223,7 @@ def create_experiment(
     if archived:
         body["archived"] = archived
     if additional_body_fields:
-        body.update(additional_body_fields)
+        body |= additional_body_fields
 
     r = req.post(master_url, "experiments", body=body)
     if not hasattr(r, "headers"):
@@ -283,29 +282,27 @@ def make_test_experiment_config(config: Dict[str, Any]) -> Dict[str, Any]:
     4. All checkpoints are GC'd after experiment finishes.
     """
     config_test = config.copy()
-    config_test.update(
-        {
-            "description": "[test-mode] {}".format(
-                config_test.get("description", str(uuid.uuid4()))
-            ),
-            "scheduling_unit": 1,
-            "min_validation_period": {"batches": 1},
-            "checkpoint_storage": {
-                **config_test.get("checkpoint_storage", {}),
-                "save_experiment_best": 0,
-                "save_trial_best": 0,
-                "save_trial_latest": 0,
-            },
-            "searcher": {
-                "name": "single",
-                "metric": config_test["searcher"]["metric"],
-                "max_length": {"batches": 1},
-            },
-            "hyperparameters": generate_random_hparam_values(config.get("hyperparameters", {})),
-            "resources": {**config_test.get("resources", {"slots_per_trial": 1})},
-            "max_restarts": 0,
-        }
-    )
+    config_test |= {
+        "description": f'[test-mode] {config_test.get("description", str(uuid.uuid4()))}',
+        "scheduling_unit": 1,
+        "min_validation_period": {"batches": 1},
+        "checkpoint_storage": {
+            **config_test.get("checkpoint_storage", {}),
+            "save_experiment_best": 0,
+            "save_trial_best": 0,
+            "save_trial_latest": 0,
+        },
+        "searcher": {
+            "name": "single",
+            "metric": config_test["searcher"]["metric"],
+            "max_length": {"batches": 1},
+        },
+        "hyperparameters": generate_random_hparam_values(
+            config.get("hyperparameters", {})
+        ),
+        "resources": {**config_test.get("resources", {"slots_per_trial": 1})},
+        "max_restarts": 0,
+    }
     config.setdefault(
         "data_layer", {"type": "shared_fs", "container_storage_path": "/tmp/determined"}
     )
@@ -330,7 +327,7 @@ def create_experiment_and_follow_logs(
         additional_body_fields=additional_body_fields,
         activate=activate,
     )
-    print("Created experiment {}".format(exp_id))
+    print(f"Created experiment {exp_id}")
     if activate and follow_first_trial_logs:
         api.follow_experiment_logs(master_url, exp_id)
     return exp_id
@@ -364,6 +361,6 @@ def create_test_experiment_and_follow_logs(
         archived=True,
         activate=True,
     )
-    print(colored("Created test experiment {}".format(exp_id), "green"))
+    print(colored(f"Created test experiment {exp_id}", "green"))
     api.experiment.follow_test_experiment_logs(master_url, exp_id)
     return exp_id

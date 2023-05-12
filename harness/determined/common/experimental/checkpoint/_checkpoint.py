@@ -95,9 +95,7 @@ class Checkpoint(object):
                 return path
 
         raise FileNotFoundError(
-            "Checkpoint {} not found in {}. This error could be caused by not having "
-            "the same shared file system mounted on the local machine as the experiment "
-            "checkpoint storage configuration.".format(self.uuid, potential_paths)
+            f"Checkpoint {self.uuid} not found in {potential_paths}. This error could be caused by not having the same shared file system mounted on the local machine as the experiment checkpoint storage configuration."
         )
 
     def download(self, path: Optional[str] = None) -> str:
@@ -143,10 +141,7 @@ class Checkpoint(object):
                     ),
                 ):
                     raise AssertionError(
-                        "Downloading from Azure, S3 or GCS requires the experiment to be "
-                        "configured with Azure, S3 or GCS checkpointing, {} found instead".format(
-                            self.experiment_config["checkpoint_storage"]["type"]
-                        )
+                        f'Downloading from Azure, S3 or GCS requires the experiment to be configured with Azure, S3 or GCS checkpointing, {self.experiment_config["checkpoint_storage"]["type"]} found instead'
                     )
 
                 metadata = storage.StorageMetadata.from_json(
@@ -209,7 +204,7 @@ class Checkpoint(object):
             self.metadata[key] = val
 
         self._session.post(
-            "/api/v1/checkpoints/{}/metadata".format(self.uuid),
+            f"/api/v1/checkpoints/{self.uuid}/metadata",
             body={"checkpoint": {"metadata": self.metadata}},
         )
 
@@ -227,7 +222,7 @@ class Checkpoint(object):
                 del self.metadata[key]
 
         self._session.post(
-            "/api/v1/checkpoints/{}/metadata".format(self.uuid),
+            f"/api/v1/checkpoints/{self.uuid}/metadata",
             body={"checkpoint": {"metadata": self.metadata}},
         )
 
@@ -265,7 +260,7 @@ class Checkpoint(object):
                 checkpoint_dir, metadata, tags=tags
             )
 
-        raise AssertionError("Unknown checkpoint format at {}".format(checkpoint_dir))
+        raise AssertionError(f"Unknown checkpoint format at {checkpoint_dir}")
 
     @staticmethod
     def parse_metadata(directory: pathlib.Path) -> Dict[str, Any]:
@@ -296,10 +291,8 @@ class Checkpoint(object):
 
     def __repr__(self) -> str:
         if self.model_name is not None:
-            return "Checkpoint(uuid={}, trial_id={}, model={}, version={})".format(
-                self.uuid, self.trial_id, self.model_name, self.model_version
-            )
-        return "Checkpoint(uuid={}, trial_id={})".format(self.uuid, self.trial_id)
+            return f"Checkpoint(uuid={self.uuid}, trial_id={self.trial_id}, model={self.model_name}, version={self.model_version})"
+        return f"Checkpoint(uuid={self.uuid}, trial_id={self.trial_id})"
 
     @staticmethod
     def from_json(data: Dict[str, Any], session: session.Session) -> "Checkpoint":

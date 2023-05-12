@@ -33,7 +33,7 @@ def load_model(
         )
 
     else:
-        raise AssertionError("Unknown checkpoint format at {}".format(str(ckpt_dir)))
+        raise AssertionError(f"Unknown checkpoint format at {str(ckpt_dir)}")
 
 
 def load_saved_model(ckpt_dir: pathlib.Path, tags: Optional[List[str]] = None) -> AutoTrackable:

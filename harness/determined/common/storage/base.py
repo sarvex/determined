@@ -31,14 +31,10 @@ class StorageMetadata:
         }
 
     def __str__(self) -> str:
-        return "<storage {}, framework {}, format {}>".format(
-            self.storage_id, self.framework, self.format
-        )
+        return f"<storage {self.storage_id}, framework {self.framework}, format {self.format}>"
 
     def __repr__(self) -> str:
-        return "<storage {}, framework {}, format {}, resources {}>".format(
-            self.storage_id, self.framework, self.format, self.resources
-        )
+        return f"<storage {self.storage_id}, framework {self.framework}, format {self.format}, resources {self.resources}>"
 
     @staticmethod
     def from_json(record: Dict[str, Any]) -> "StorageMetadata":
@@ -88,7 +84,7 @@ class StorageManager:
         created and deleting the temporary checkpoint directory.
         """
 
-        if storage_id == "":
+        if not storage_id:
             storage_id = str(uuid.uuid4())
 
         # Set umask to 0 in order that the storage dir allows future containers of any owner to
@@ -124,10 +120,12 @@ class StorageManager:
         storage_dir = os.path.join(self._base_path, metadata.storage_id)
 
         check_true(
-            os.path.exists(storage_dir), "Storage directory does not exist: {}".format(storage_dir)
+            os.path.exists(storage_dir),
+            f"Storage directory does not exist: {storage_dir}",
         )
         check_true(
-            os.path.isdir(storage_dir), "Storage path is not a directory: {}".format(storage_dir)
+            os.path.isdir(storage_dir),
+            f"Storage path is not a directory: {storage_dir}",
         )
 
         self._remove_checkpoint_directory(metadata.storage_id, ignore_errors=False)
@@ -151,12 +149,12 @@ class StorageManager:
         signified by a trailing "/". Returned path names are relative to
         `root`; directories are included but have a file size of 0.
         """
-        check_true(os.path.isdir(root), "{} must be an extant directory".format(root))
+        check_true(os.path.isdir(root), f"{root} must be an extant directory")
         result = {}
         for cur_path, sub_dirs, files in os.walk(root):
             for d in sub_dirs:
                 abs_path = os.path.join(cur_path, d)
-                rel_path = os.path.relpath(abs_path, root) + "/"
+                rel_path = f"{os.path.relpath(abs_path, root)}/"
                 result[rel_path] = 0
 
             for f in files:

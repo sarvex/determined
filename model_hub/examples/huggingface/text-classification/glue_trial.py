@@ -153,12 +153,7 @@ class GLUETrial(hf.BaseTransformerTrial):
                     sentence1_key, sentence2_key = non_label_column_names[0], None
 
         # Padding strategy
-        if self.data_config.pad_to_max_length:
-            padding = "max_length"
-        else:
-            # We will pad later, dynamically at batch creation to the max_seq_length in each batch.
-            padding = False
-
+        padding = "max_length" if self.data_config.pad_to_max_length else False
         # Some models have set the order of the labels to use, so let's make sure we do use it.
         label_to_id = None
         if (

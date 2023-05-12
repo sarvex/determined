@@ -99,19 +99,16 @@ class TrialReference:
             )
 
         if uuid:
-            resp = self._session.get("/api/v1/checkpoints/{}".format(uuid))
+            resp = self._session.get(f"/api/v1/checkpoints/{uuid}")
             return checkpoint.Checkpoint.from_json(resp.json()["checkpoint"], self._session)
 
         r = self._session.get(
-            "/api/v1/trials/{}/checkpoints".format(self.id),
-            # The default sort order from the API is by batch number. The order
-            # by parameter indicates descending order.
-            params={"order_by": 2},
+            f"/api/v1/trials/{self.id}/checkpoints", params={"order_by": 2}
         ).json()
         checkpoints = r["checkpoints"]
 
         if not checkpoints:
-            raise AssertionError("No checkpoint found for trial {}".format(self.id))
+            raise AssertionError(f"No checkpoint found for trial {self.id}")
 
         if latest:
             return checkpoint.Checkpoint.from_json(checkpoints[0], self._session)
@@ -130,4 +127,4 @@ class TrialReference:
         )
 
     def __repr__(self) -> str:
-        return "Trial(id={})".format(self.id)
+        return f"Trial(id={self.id})"

@@ -1,6 +1,7 @@
 """
 Trains a simple DNN on the MNIST dataset using the TensorFlow Estimator API.
 """
+
 import logging
 import os
 import tarfile
@@ -14,9 +15,7 @@ from determined.estimator import EstimatorTrial, EstimatorTrialContext, ServingI
 
 WORK_DIRECTORY = "/tmp/determined-mnist-estimator-work-dir"
 MNIST_TF_RECORDS_FILE = "mnist-tfrecord.tar.gz"
-MNIST_TF_RECORDS_URL = (
-    "https://s3-us-west-2.amazonaws.com/determined-ai-test-data/" + MNIST_TF_RECORDS_FILE
-)
+MNIST_TF_RECORDS_URL = f"https://s3-us-west-2.amazonaws.com/determined-ai-test-data/{MNIST_TF_RECORDS_FILE}"
 
 IMAGE_SIZE = 28
 NUM_CLASSES = 10
@@ -33,14 +32,14 @@ def download_data(download_directory) -> str:
 
     filepath = os.path.join(download_directory, MNIST_TF_RECORDS_FILE)
     if not tf.io.gfile.exists(filepath):
-        logging.info("Downloading {}".format(MNIST_TF_RECORDS_URL))
+        logging.info(f"Downloading {MNIST_TF_RECORDS_URL}")
 
         r = requests.get(MNIST_TF_RECORDS_URL)
         with tf.io.gfile.GFile(filepath, "wb") as f:
             f.write(r.content)
-            logging.info("Downloaded {} ({} bytes)".format(MNIST_TF_RECORDS_FILE, f.size()))
+            logging.info(f"Downloaded {MNIST_TF_RECORDS_FILE} ({f.size()} bytes)")
 
-        logging.info("Extracting {} to {}".format(MNIST_TF_RECORDS_FILE, download_directory))
+        logging.info(f"Extracting {MNIST_TF_RECORDS_FILE} to {download_directory}")
         with tarfile.open(filepath, mode="r:gz") as f:
             f.extractall(path=download_directory)
 

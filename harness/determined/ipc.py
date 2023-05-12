@@ -290,8 +290,7 @@ class ZMQServer:
 
     def receive_blocking(self, send_rank: int) -> Any:
         check.lt(send_rank, len(self.sockets))
-        message = self.sockets[send_rank].recv_pyobj()  # type: ignore
-        return message
+        return self.sockets[send_rank].recv_pyobj()
 
     def receive_non_blocking(
         self, send_rank: int, deadline: Optional[float] = None

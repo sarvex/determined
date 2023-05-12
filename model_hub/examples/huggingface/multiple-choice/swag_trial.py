@@ -53,15 +53,13 @@ class SWAGTrial(hf.BaseTransformerTrial):
         self.raw_datasets = hf.default_load_dataset(self.data_config)
         self.tokenized_datasets = self.build_datasets()
         train_length = len(self.tokenized_datasets["train"])
-        self.logger.info("training records: {}".format(train_length))
+        self.logger.info(f"training records: {train_length}")
         if (
             "records_per_epoch" in self.exp_config
             and train_length != self.exp_config["records_per_epoch"]
         ):
             self.logger.warning(
-                "number of train records {} does not match records_per_epoch of {}".format(
-                    train_length, self.exp_config["records_per_epoch"]
-                )
+                f'number of train records {train_length} does not match records_per_epoch of {self.exp_config["records_per_epoch"]}'
             )
 
     def build_datasets(self) -> Union[datasets.Dataset, datasets.DatasetDict]:

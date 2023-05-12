@@ -51,10 +51,7 @@ def load_and_cache_examples(data_dir: Path, tokenizer, task, max_seq_length, doc
     # Load data features from cache or dataset file
     cached_features_file = os.path.join(
         str(data_dir.absolute()),
-        "cache_{}_{}".format(
-            "dev" if evaluate else "train",
-            model_name,
-        ),
+        f'cache_{"dev" if evaluate else "train"}_{model_name}',
     )
 
     # Init features and dataset from cache if it exists

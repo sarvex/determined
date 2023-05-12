@@ -51,7 +51,7 @@ class GCSStorageManager(StorageManager):
     def post_store_path(self, storage_id: str, storage_dir: str, metadata: StorageMetadata) -> None:
         """post_store_path uploads the checkpoint to gcs and deletes the original files."""
         try:
-            logging.info("Uploading checkpoint {} to GCS".format(storage_id))
+            logging.info(f"Uploading checkpoint {storage_id} to GCS")
             self.upload(metadata, storage_dir)
         finally:
             self._remove_checkpoint_directory(metadata.storage_id)
@@ -61,7 +61,7 @@ class GCSStorageManager(StorageManager):
         storage_dir = os.path.join(self._base_path, metadata.storage_id)
         os.makedirs(storage_dir, exist_ok=True)
 
-        logging.info("Downloading checkpoint {} from GCS".format(metadata.storage_id))
+        logging.info(f"Downloading checkpoint {metadata.storage_id} from GCS")
         self.download(metadata, storage_dir)
 
         try:
@@ -72,10 +72,10 @@ class GCSStorageManager(StorageManager):
     @util.preserve_random_state
     def upload(self, metadata: StorageMetadata, storage_dir: str) -> None:
         for rel_path in metadata.resources.keys():
-            blob_name = "{}/{}".format(metadata.storage_id, rel_path)
+            blob_name = f"{metadata.storage_id}/{rel_path}"
             blob = self.bucket.blob(blob_name)
 
-            logging.debug("Uploading to GCS: {}".format(blob_name))
+            logging.debug(f"Uploading to GCS: {blob_name}")
 
             if rel_path.endswith("/"):
                 # Create empty blobs for subdirectories. This ensures
@@ -96,19 +96,19 @@ class GCSStorageManager(StorageManager):
             if rel_path.endswith("/"):
                 continue
 
-            blob_name = "{}/{}".format(metadata.storage_id, rel_path)
+            blob_name = f"{metadata.storage_id}/{rel_path}"
             blob = self.bucket.blob(blob_name)
 
-            logging.debug("Downloading from GCS: {}".format(blob_name))
+            logging.debug(f"Downloading from GCS: {blob_name}")
 
             blob.download_to_filename(abs_path)
 
     @util.preserve_random_state
     def delete(self, metadata: StorageMetadata) -> None:
-        logging.info("Deleting checkpoint {} from GCS".format(metadata.storage_id))
+        logging.info(f"Deleting checkpoint {metadata.storage_id} from GCS")
 
         for rel_path in metadata.resources.keys():
-            logging.debug("Deleting {} from GCS".format(rel_path))
-            blob_name = "{}/{}".format(metadata.storage_id, rel_path)
+            logging.debug(f"Deleting {rel_path} from GCS")
+            blob_name = f"{metadata.storage_id}/{rel_path}"
             blob = self.bucket.blob(blob_name)
             blob.delete()

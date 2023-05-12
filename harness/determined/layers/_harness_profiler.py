@@ -100,9 +100,10 @@ class HarnessProfiler(object):
 
         if self._use_gpu:
             gpu_list = determined.gpu.get_gpus()
-            self._gpu_loads = {g.id: Measurement("GPU {} Load (%)".format(g.id)) for g in gpu_list}
+            self._gpu_loads = {g.id: Measurement(f"GPU {g.id} Load (%)") for g in gpu_list}
             self._gpu_utilizations = {
-                g.id: Measurement("GPU {} Memory Utilization (%)".format(g.id)) for g in gpu_list
+                g.id: Measurement(f"GPU {g.id} Memory Utilization (%)")
+                for g in gpu_list
             }
 
     def _monitor(self) -> None:

@@ -554,7 +554,7 @@ def test_distributed_logging() -> None:
 
     for i in range(config["resources"]["slots_per_trial"]):
         assert exp.check_if_string_present_in_trial_logs(
-            t_id, "finished train_batch for rank {}".format(i)
+            t_id, f"finished train_batch for rank {i}"
         )
 
 

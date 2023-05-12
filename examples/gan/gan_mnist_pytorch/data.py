@@ -31,7 +31,7 @@ def download_dataset(download_directory: str, data_config: Dict[str, Any]) -> st
     os.makedirs(download_directory, exist_ok=True)
     filepath = os.path.join(download_directory, basename)
     if not os.path.exists(filepath):
-        logging.info("Downloading {} to {}".format(url, filepath))
+        logging.info(f"Downloading {url} to {filepath}")
 
         r = requests.get(url, stream=True)
         with open(filepath, "wb") as f:

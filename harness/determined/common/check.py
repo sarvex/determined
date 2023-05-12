@@ -35,9 +35,9 @@ def true(val: bool, reason: Optional[str] = None) -> None:
     if val:
         return
 
-    msg = "CHECK FAILED! Got {}, expected True".format(val)
+    msg = f"CHECK FAILED! Got {val}, expected True"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -50,9 +50,9 @@ def false(val: bool, reason: Optional[str] = None) -> None:
     if not val:
         return
 
-    msg = "CHECK FAILED! Got {}, expected False".format(val)
+    msg = f"CHECK FAILED! Got {val}, expected False"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -65,9 +65,9 @@ def is_none(val: Optional[Any], reason: Optional[str] = None) -> None:
     if val is None:
         return
 
-    msg = "CHECK FAILED! Got {}, expected None".format(val)
+    msg = f"CHECK FAILED! Got {val}, expected None"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -80,9 +80,9 @@ def is_not_none(val: Optional[Any], reason: Optional[str] = None) -> None:
     if val is not None:
         return
 
-    msg = "CHECK FAILED! Got {}, expected non-None".format(val)
+    msg = f"CHECK FAILED! Got {val}, expected non-None"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -95,9 +95,9 @@ def eq(val: Any, expected: Any, reason: Optional[str] = None) -> None:
     if val == expected:
         return
 
-    msg = "CHECK FAILED! Got {}, expected {}".format(val, expected)
+    msg = f"CHECK FAILED! Got {val}, expected {expected}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -110,9 +110,9 @@ def not_eq(x: Any, y: Any, reason: Optional[str] = None) -> None:
     if x != y:
         return
 
-    msg = "CHECK FAILED! Got {}, expected value != {}".format(x, y)
+    msg = f"CHECK FAILED! Got {x}, expected value != {y}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -125,9 +125,9 @@ def gt(x: Any, y: Any, reason: Optional[str] = None) -> None:
     if x > y:
         return
 
-    msg = "CHECK FAILED! Got {}, expected value > {}".format(x, y)
+    msg = f"CHECK FAILED! Got {x}, expected value > {y}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -140,9 +140,9 @@ def gt_eq(x: Any, y: Any, reason: Optional[str] = None) -> None:
     if x >= y:
         return
 
-    msg = "CHECK FAILED! Got {}, expected value >= {}".format(x, y)
+    msg = f"CHECK FAILED! Got {x}, expected value >= {y}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -155,9 +155,9 @@ def lt(x: Any, y: Any, reason: Optional[str] = None) -> None:
     if x < y:
         return
 
-    msg = "CHECK FAILED! Got {}, expected value < {}".format(x, y)
+    msg = f"CHECK FAILED! Got {x}, expected value < {y}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -170,9 +170,9 @@ def lt_eq(x: Any, y: Any, reason: Optional[str] = None) -> None:
     if x <= y:
         return
 
-    msg = "CHECK FAILED! Got {}, expected value <= {}".format(x, y)
+    msg = f"CHECK FAILED! Got {x}, expected value <= {y}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -185,10 +185,12 @@ def equal_lengths(x: Sized, y: Sized, reason: Optional[str] = None) -> None:
     if len(x) == len(y):
         return
 
-    msg = "CHECK FAILED! Expected lengths {} and {} to be equal".format(len(x), len(y))
-    msg += "; values: {}, {}".format(x, y)
+    msg = (
+        f"CHECK FAILED! Expected lengths {len(x)} and {len(y)} to be equal"
+        + f"; values: {x}, {y}"
+    )
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -202,10 +204,10 @@ def len_eq(val: Sized, expected_len: int, reason: Optional[str] = None) -> None:
     if val_len == expected_len:
         return
 
-    msg = "CHECK FAILED! Got length {}, expected length {}".format(val_len, expected_len)
+    msg = f"CHECK FAILED! Got length {val_len}, expected length {expected_len}"
     if reason is not None:
-        msg += ": {}".format(reason)
-    msg += ". Values: {}".format(val)
+        msg += f": {reason}"
+    msg += f". Values: {val}"
 
     raise CheckFailedError(msg)
 
@@ -218,16 +220,13 @@ def is_in(val: Any, expected: Container[Any], reason: Optional[str] = None) -> N
     if val in expected:
         return
 
-    msg = "CHECK FAILED! "
-
-    # Report a more concise error message when `expected` is a dict.
-    if isinstance(expected, dict):
-        msg += "'{}' is not in {}".format(val, list(expected.keys()))
-    else:
-        msg += "'{}' is not in {}".format(val, expected)
-
+    msg = "CHECK FAILED! " + (
+        f"'{val}' is not in {list(expected.keys())}"
+        if isinstance(expected, dict)
+        else f"'{val}' is not in {expected}"
+    )
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -240,9 +239,9 @@ def not_in(val: Any, expected: Container[Any], reason: Optional[str] = None) -> 
     if val not in expected:
         return
 
-    msg = "CHECK FAILED! Got {}, expected value not in {}".format(val, expected)
+    msg = f"CHECK FAILED! Got {val}, expected value not in {expected}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -255,9 +254,9 @@ def is_type(val: Any, expected: type, reason: Optional[str] = None) -> None:
     if type(val) == expected:
         return
 
-    msg = "CHECK FAILED! {} has type {}, expected type {}".format(val, type(val), expected)
+    msg = f"CHECK FAILED! {val} has type {type(val)}, expected type {expected}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -272,9 +271,9 @@ def is_instance(
     if isinstance(val, expected):
         return
 
-    msg = "CHECK FAILED! {} has type {}, expected isinstance of {}".format(val, type(val), expected)
+    msg = f"CHECK FAILED! {val} has type {type(val)}, expected isinstance of {expected}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -291,11 +290,9 @@ def is_not_instance(
     if not isinstance(val, expected):
         return
 
-    msg = "CHECK FAILED! {} has type {}, expected not isinstance of {}".format(
-        val, type(val), expected
-    )
+    msg = f"CHECK FAILED! {val} has type {type(val)}, expected not isinstance of {expected}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 
@@ -310,9 +307,9 @@ def is_subclass(val: Any, expected: type, reason: Optional[str] = None) -> None:
     if issubclass(val, expected):
         return
 
-    msg = "CHECK FAILED! {} has type {}, expected issubclass of {}".format(val, type(val), expected)
+    msg = f"CHECK FAILED! {val} has type {type(val)}, expected issubclass of {expected}"
     if reason is not None:
-        msg += ": {}".format(reason)
+        msg += f": {reason}"
 
     raise CheckFailedError(msg)
 

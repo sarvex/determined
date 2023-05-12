@@ -34,12 +34,10 @@ def expose_gpus() -> Generator:
     if not gpu_uuids:
         os.environ["DET_USE_GPU"] = "0"
         os.environ["NVIDIA_VISIBLE_DEVICES"] = ""
-        yield
     else:
         os.environ["DET_USE_GPU"] = "1"
         os.environ["NVIDIA_VISIBLE_DEVICES"] = ",".join(gpu_uuids)
-        yield
-
+    yield
     # Restore original environment.
     if old_use_gpu is None:
         del os.environ["DET_USE_GPU"]

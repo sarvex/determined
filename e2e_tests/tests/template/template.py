@@ -10,7 +10,7 @@ def set_template(template_name: str, template_file: str) -> str:
     assert completed_process.returncode == 0
     m = re.search(r"Set template (\w+)", str(completed_process.stdout))
     assert m is not None
-    return str(m.group(1))
+    return str(m[1])
 
 
 def maybe_set_template(template_name: str, template_file: str) -> subprocess.CompletedProcess:

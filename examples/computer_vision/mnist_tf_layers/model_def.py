@@ -39,13 +39,11 @@ def calculate_logits(hparams: Dict[str, Any], images: tf.Tensor, training: bool)
     )
     dense = tf.layers.dense(inputs=pool2_flat, units=512, activation=tf.nn.relu)
 
-    if training:
-        dropout = tf.layers.dropout(inputs=dense, rate=0.5)
-        logits = tf.layers.dense(inputs=dropout, units=NUM_CLASSES)
-    else:
-        logits = tf.layers.dense(inputs=dense, units=NUM_CLASSES)
+    if not training:
+        return tf.layers.dense(inputs=dense, units=NUM_CLASSES)
 
-    return logits
+    dropout = tf.layers.dropout(inputs=dense, rate=0.5)
+    return tf.layers.dense(inputs=dropout, units=NUM_CLASSES)
 
 
 def calculate_loss(labels: tf.Tensor, logits: tf.Tensor) -> tf.Tensor:

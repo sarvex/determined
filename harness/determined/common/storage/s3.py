@@ -51,7 +51,7 @@ class S3StorageManager(StorageManager):
     def post_store_path(self, storage_id: str, storage_dir: str, metadata: StorageMetadata) -> None:
         """post_store_path uploads the checkpoint to s3 and deletes the original files."""
         try:
-            logging.info("Uploading checkpoint {} to s3".format(storage_id))
+            logging.info(f"Uploading checkpoint {storage_id} to s3")
             self.upload(metadata, storage_dir)
         finally:
             self._remove_checkpoint_directory(metadata.storage_id)
@@ -61,7 +61,7 @@ class S3StorageManager(StorageManager):
         storage_dir = os.path.join(self._base_path, metadata.storage_id)
         os.makedirs(storage_dir, exist_ok=True)
 
-        logging.info("Downloading checkpoint {} from S3".format(metadata.storage_id))
+        logging.info(f"Downloading checkpoint {metadata.storage_id} from S3")
         self.download(metadata, storage_dir)
 
         try:
@@ -72,23 +72,16 @@ class S3StorageManager(StorageManager):
     @util.preserve_random_state
     def upload(self, metadata: StorageMetadata, storage_dir: str) -> None:
         for rel_path in metadata.resources.keys():
-            key_name = "{}/{}".format(metadata.storage_id, rel_path)
-            url = "s3://{}/{}".format(self.bucket, key_name)
+            key_name = f"{metadata.storage_id}/{rel_path}"
+            url = f"s3://{self.bucket}/{key_name}"
 
-            logging.debug("Uploading {} to {}".format(rel_path, url))
+            logging.debug(f"Uploading {rel_path} to {url}")
 
             if rel_path.endswith("/"):
                 # Create empty S3 keys for each subdirectory to mimic what the S3 console does to
                 # represent empty directories.
                 if not self._use_minio_workaround:
                     self.client.put_object(Bucket=self.bucket, Key=key_name, Body=b"")
-                else:
-                    # boto3 will puke on the following MinIO response if you ever create a
-                    # directory by uploading an empty blob.  Uploading a normal file in the
-                    # directory and then deleting it seems to cause MinIO to prune the empty
-                    # directory.  The AWS authentication scheme is complex and not worth the
-                    # effort for supporting empty directories, so... just ignore empty directories.
-                    pass
             else:
                 abs_path = os.path.join(storage_dir, rel_path)
                 self.client.upload_file(abs_path, self.bucket, key_name)
@@ -105,22 +98,22 @@ class S3StorageManager(StorageManager):
             if rel_path.endswith("/"):
                 continue
 
-            key_name = "{}/{}".format(metadata.storage_id, rel_path)
-            url = "s3://{}/{}".format(self.bucket, key_name)
-            logging.debug("Downloading {} from {}".format(url, rel_path))
+            key_name = f"{metadata.storage_id}/{rel_path}"
+            url = f"s3://{self.bucket}/{key_name}"
+            logging.debug(f"Downloading {url} from {rel_path}")
 
             self.client.download_file(self.bucket, key_name, abs_path)
 
     @util.preserve_random_state
     def delete(self, metadata: StorageMetadata) -> None:
-        logging.info("Deleting checkpoint {} from S3".format(metadata.storage_id))
+        logging.info(f"Deleting checkpoint {metadata.storage_id} from S3")
 
         objects = [
-            {"Key": "{}/{}".format(metadata.storage_id, rel_path)}
+            {"Key": f"{metadata.storage_id}/{rel_path}"}
             for rel_path in metadata.resources.keys()
         ]
 
         # S3 delete_objects has a limit of 1000 objects.
         for chunk in util.chunks(objects, 1000):
-            logging.debug("Deleting {} objects from S3".format(len(chunk)))
+            logging.debug(f"Deleting {len(chunk)} objects from S3")
             self.client.delete_objects(Bucket=self.bucket, Delete={"Objects": chunk})

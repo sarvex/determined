@@ -136,18 +136,14 @@ def _scan_checkpoint_directory(checkpoint_dir: str) -> List[Checkpoint]:
         new_items = []
         for path, ts in reversed(items):
             basename = os.path.basename(path)
-            if basename not in scanned_basenames:
-                continue
-            elif basename in seen:
+            if basename not in scanned_basenames or basename in seen:
                 continue
             seen.add(basename)
             new_items.append((path, ts))
 
         if not new_items:
             raise Exception(
-                "No checkpoint files found for {} checkpoint in directory {}".format(
-                    cname, checkpoint_dir
-                )
+                f"No checkpoint files found for {cname} checkpoint in directory {checkpoint_dir}"
             )
 
         new_paths, new_ts = zip(*reversed(new_items))

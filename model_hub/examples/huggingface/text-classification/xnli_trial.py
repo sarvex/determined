@@ -87,12 +87,7 @@ class XNLITrial(hf.BaseTransformerTrial):
         self.reducer = context.experimental.wrap_reducer(compute_metrics, for_training=False)
 
     def build_datasets(self) -> Dict[str, Union[datasets.Dataset, datasets.DatasetDict]]:
-        if self.data_config.pad_to_max_length:
-            padding = "max_length"
-        else:
-            # We will pad later, dynamically at batch creation to the max_seq_length in each batch.
-            padding = False
-
+        padding = "max_length" if self.data_config.pad_to_max_length else False
         # We cannot use self.tokenizer as a non-local variable in the preprocess_function if we
         # want map to be able to cache the output of the tokenizer.  Hence, the preprocess_function
         # takes a tokenizer explicitly as an input and we create a closure using functools.partial.

@@ -12,7 +12,10 @@ import download_glue_data
 
 
 def download_data(task, data_dir, path_to_mrpc) -> None:
-    if os.path.exists(data_dir + "/" + task) and len(os.listdir(data_dir + "/" + task)) > 0:
+    if (
+        os.path.exists(f"{data_dir}/{task}")
+        and len(os.listdir(f"{data_dir}/{task}")) > 0
+    ):
         # Exit if the data already exists
         return
 
@@ -62,5 +65,6 @@ def load_and_cache_examples(base_data_dir: str, config, model_type, max_seq_leng
     all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long)
     all_labels = torch.tensor([f.label for f in features], dtype=torch.long)
 
-    dataset = TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_labels)
-    return dataset
+    return TensorDataset(
+        all_input_ids, all_attention_mask, all_token_type_ids, all_labels
+    )

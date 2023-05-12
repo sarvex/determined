@@ -85,9 +85,9 @@ class _TrialWorkloadManager(WorkloadManager):
     def __iter__(self) -> workload.Stream:
         for w, _, response_func in self.workloads:
             if self.rendezvous_info.get_rank() == 0:
-                logging.info("Running workload {}".format(w))
+                logging.info(f"Running workload {w}")
             else:
-                logging.debug("Running workload {}".format(w))
+                logging.debug(f"Running workload {w}")
             self.check_sane_workload(w)
 
             self.workload = w
@@ -101,7 +101,7 @@ class _TrialWorkloadManager(WorkloadManager):
             elif w.kind == workload.Workload.Kind.TERMINATE:
                 yield from self.yield_terminate(w, response_func)
             else:
-                raise AssertionError("Unexpected workload: {}".format(w.kind))
+                raise AssertionError(f"Unexpected workload: {w.kind}")
 
     def check_sane_workload(self, new_workload: workload.Workload) -> None:
         # If this is the initial workload, we don't expect to start with

@@ -147,21 +147,8 @@ class DataLoader:
                     "shuffle, and drop_last"
                 )
 
-        if sampler is None:  # give default samplers
-            # TODO(DET-1524): uncomment this logic and delete the one after it.
-            # if self._dataset_kind == _DatasetKind.Iterable:
-            #    # See NOTE [ Custom Samplers and IterableDataset ]
-            #    sampler = _InfiniteConstantSampler()
-            # else:  # map-style
-            #    if shuffle:
-            #        sampler = RandomSampler(dataset)
-            #    else:
-            #        sampler = SequentialSampler(dataset)
-            if shuffle:
-                sampler = RandomSampler(dataset)  # type: ignore
-            else:
-                sampler = SequentialSampler(dataset)  # type: ignore
-
+        if sampler is None:
+            sampler = RandomSampler(dataset) if shuffle else SequentialSampler(dataset)
         if batch_size is not None and batch_sampler is None:
             # auto_collation without custom batch_sampler
             batch_sampler = BatchSampler(sampler, batch_size, drop_last)
@@ -374,7 +361,7 @@ def data_length(data: _Data) -> int:
                 " of inputs."
             )
         return len(data[0])
-    raise TypeError("Data of incorrect type: {}".format(type(data)))
+    raise TypeError(f"Data of incorrect type: {type(data)}")
 
 
 def to_device(

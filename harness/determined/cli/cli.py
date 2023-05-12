@@ -144,33 +144,59 @@ def preview_search(args: Namespace) -> None:
 # fmt: off
 
 args_description = [
-    Arg("-u", "--user",
-        help="run as the given user", metavar="username",
-        default=None),
-    Arg("-m", "--master",
-        help="master address", metavar="address",
-        default=get_default_master_address()),
-    Arg("-v", "--version",
-        action="version", help="print CLI version and exit",
-        version="%(prog)s {}".format(determined.__version__)),
-
+    Arg(
+        "-u",
+        "--user",
+        help="run as the given user",
+        metavar="username",
+        default=None,
+    ),
+    Arg(
+        "-m",
+        "--master",
+        help="master address",
+        metavar="address",
+        default=get_default_master_address(),
+    ),
+    Arg(
+        "-v",
+        "--version",
+        action="version",
+        help="print CLI version and exit",
+        version=f"%(prog)s {determined.__version__}",
+    ),
     experiment.args_description,
-
     checkpoint.args_description,
-
-    Cmd("task", None, "manage tasks (commands, experiments, notebooks, shells, tensorboards)", [
-        Cmd("list", list_tasks, "list tasks in cluster", [
-            Arg("--csv", action="store_true", help="print as CSV"),
-        ], is_default=True),
-    ]),
-
-    Cmd("preview-search", preview_search, "preview search", [
-        Arg("config_file", type=FileType("r"),
-            help="experiment config file (.yaml)")
-    ]),
-
+    Cmd(
+        "task",
+        None,
+        "manage tasks (commands, experiments, notebooks, shells, tensorboards)",
+        [
+            Cmd(
+                "list",
+                list_tasks,
+                "list tasks in cluster",
+                [
+                    Arg("--csv", action="store_true", help="print as CSV"),
+                ],
+                is_default=True,
+            ),
+        ],
+    ),
+    Cmd(
+        "preview-search",
+        preview_search,
+        "preview search",
+        [
+            Arg(
+                "config_file",
+                type=FileType("r"),
+                help="experiment config file (.yaml)",
+            )
+        ],
+    ),
     deploy_args_description,
-]  # type: List[object]
+]
 
 # fmt: on
 

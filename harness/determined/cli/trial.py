@@ -15,9 +15,9 @@ from .checkpoint import format_checkpoint, format_validation, render_checkpoint
 @authentication.required
 def describe_trial(args: Namespace) -> None:
     if args.metrics:
-        r = api.get(args.master, "trials/{}/metrics".format(args.trial_id))
+        r = api.get(args.master, f"trials/{args.trial_id}/metrics")
     else:
-        r = api.get(args.master, "trials/{}".format(args.trial_id))
+        r = api.get(args.master, f"trials/{args.trial_id}")
 
     trial = r.json()
 
@@ -100,8 +100,8 @@ def download(args: Namespace) -> None:
 
 @authentication.required
 def kill_trial(args: Namespace) -> None:
-    api.post(args.master, "trials/{}/kill".format(args.trial_id))
-    print("Killed trial {}".format(args.trial_id))
+    api.post(args.master, f"trials/{args.trial_id}/kill")
+    print(f"Killed trial {args.trial_id}")
 
 
 @authentication.required

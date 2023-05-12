@@ -41,7 +41,7 @@ def get_data(data_path: str) -> Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.nd
     train_labels = np.empty((num_train_samples,), dtype="uint8")
 
     for i in range(1, 6):
-        fpath = os.path.join(data_path, "data_batch_" + str(i))
+        fpath = os.path.join(data_path, f"data_batch_{str(i)}")
         (
             train_data[(i - 1) * 10000 : i * 10000, :, :, :],
             train_labels[(i - 1) * 10000 : i * 10000],
@@ -79,11 +79,9 @@ def get_training_data(
         "horizontal_flip": horizontal_flip,
     }
 
-    # Returns a tf.keras.Sequence.
-    train = augment_data(
+    return augment_data(
         train_data, train_labels, batch_size, data_augmentation
     )
-    return train
 
 def get_validation_data(data_directory):
     (_, _), (test_data, test_labels) = get_data(data_directory)

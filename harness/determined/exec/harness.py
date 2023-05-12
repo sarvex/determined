@@ -76,7 +76,7 @@ def maybe_load_checkpoint(
 
     else:
         metadata = storage.StorageMetadata.from_json(checkpoint)
-        logging.info("Restoring trial from checkpoint {}".format(metadata.storage_id))
+        logging.info(f"Restoring trial from checkpoint {metadata.storage_id}")
 
         with storage_mgr.restore_path(metadata) as path:
             yield pathlib.Path(path)
@@ -154,7 +154,7 @@ def build_and_run_training_pipeline(env: det.EnvContext) -> None:
 def main() -> None:
     for k in ENVIRONMENT_VARIABLE_KEYS:
         if k not in os.environ:
-            sys.exit("Environment not set: missing " + k)
+            sys.exit(f"Environment not set: missing {k}")
 
     experiment_config = simplejson.loads(os.environ["DET_EXPERIMENT_CONFIG"])
     debug = experiment_config.get("debug", False)
@@ -233,14 +233,13 @@ def main() -> None:
             container_path=constants.SHARED_FS_CONTAINER_PATH,
         )
     except Exception as e:
-        logging.error("Checkpoint storage validation failed: {}".format(e))
+        logging.error(f"Checkpoint storage validation failed: {e}")
         sys.exit(1)
 
     try:
         build_and_run_training_pipeline(env)
     except det.InvalidHP:
         logging.info("InvalidHP detected, trial is exiting")
-        pass
 
 
 if __name__ == "__main__":

@@ -80,13 +80,12 @@ class TriangleLabelSum(pytorch.MetricReducer):
 
 
 def triangle_label_sum(updates: List) -> Any:
-    out = 0
-    for update_idx, (label_sum, batch_idx) in enumerate(updates):
-        if batch_idx is not None:
-            out += batch_idx * label_sum
-        else:
-            out += update_idx * label_sum
-    return out
+    return sum(
+        batch_idx * label_sum
+        if batch_idx is not None
+        else update_idx * label_sum
+        for update_idx, (label_sum, batch_idx) in enumerate(updates)
+    )
 
 
 class OneVarTrial(pytorch.PyTorchTrial):

@@ -166,9 +166,7 @@ class PyTorchTrialController(det.LoopTrialController):
                         )
                     )
                 except det.InvalidHP as e:
-                    logging.info(
-                        "Invalid hyperparameter exception in trial train step: {}".format(e)
-                    )
+                    logging.info(f"Invalid hyperparameter exception in trial train step: {e}")
                     response_func(
                         util.wrap_metrics(
                             {},
@@ -188,9 +186,7 @@ class PyTorchTrialController(det.LoopTrialController):
                         )
                     )
                 except det.InvalidHP as e:
-                    logging.info(
-                        "Invalid hyperparameter exception in trial validation step: {}".format(e)
-                    )
+                    logging.info(f"Invalid hyperparameter exception in trial validation step: {e}")
                     response_func(
                         util.wrap_metrics(
                             {},
@@ -208,7 +204,7 @@ class PyTorchTrialController(det.LoopTrialController):
                 response_func({} if self.is_chief else workload.Skipped())
                 break
             else:
-                raise AssertionError("Unexpected workload: {}".format(w.kind))
+                raise AssertionError(f"Unexpected workload: {w.kind}")
 
     def get_epoch_idx(self, batch_id: int) -> int:
         return batch_id // len(self.training_loader)
@@ -226,15 +222,11 @@ class PyTorchTrialController(det.LoopTrialController):
             metrics_timeseries, num_batches=len(per_batch_metrics)
         )
 
-        # If the value for a metric is a single-element array, the averaging process will
-        # change that into just the element. We record what metrics are single-element arrays
-        # so we can wrap them in an array later (for perfect compatibility with non-averaging
-        # codepath).
-        array_metrics = []
-        for metric_name in per_batch_metrics[0].keys():
-            if isinstance(per_batch_metrics[0][metric_name], np.ndarray):
-                array_metrics.append(metric_name)
-
+        array_metrics = [
+            metric_name
+            for metric_name in per_batch_metrics[0].keys()
+            if isinstance(per_batch_metrics[0][metric_name], np.ndarray)
+        ]
         if self.is_chief:
             combined_timeseries_type = Dict[str, List[List[Any]]]
             combined_timeseries = cast(combined_timeseries_type, combined_timeseries)
@@ -652,21 +644,13 @@ class PyTorchTrialController(det.LoopTrialController):
             for idx, lr_scheduler in enumerate(self.context.lr_schedulers):
                 lr_scheduler.load_state_dict(checkpoint["lr_schedulers_state_dict"][idx])
 
-        if "scaler_state_dict":
-            if self.context._scaler:
-                self.context._scaler.load_state_dict(checkpoint["scaler_state_dict"])
-            else:
-                logging.warning(
-                    "There exists scaler_state_dict in checkpoint but the experiment is not using "
-                    "AMP."
-                )
+        if self.context._scaler:
+            self.context._scaler.load_state_dict(checkpoint["scaler_state_dict"])
         else:
-            if self.context._scaler:
-                logging.warning(
-                    "The experiment is using AMP but scaler_state_dict does not exist in the "
-                    "checkpoint."
-                )
-
+            logging.warning(
+                "There exists scaler_state_dict in checkpoint but the experiment is not using "
+                "AMP."
+            )
         if "amp_state" in checkpoint:
             if self.context._use_apex:
                 apex.amp.load_state_dict(checkpoint["amp_state"])
@@ -674,11 +658,10 @@ class PyTorchTrialController(det.LoopTrialController):
                 logging.warning(
                     "There exists amp_state in checkpoint but the experiment is not using Apex."
                 )
-        else:
-            if self.context._use_apex:
-                logging.warning(
-                    "The experiment is using Apex but amp_state does not exist in the checkpoint."
-                )
+        elif self.context._use_apex:
+            logging.warning(
+                "The experiment is using Apex but amp_state does not exist in the checkpoint."
+            )
 
         if "rng_state" in checkpoint:
             rng_state = checkpoint["rng_state"]
@@ -695,11 +678,10 @@ class PyTorchTrialController(det.LoopTrialController):
                     logging.warning(
                         "The system has a gpu but no gpu_rng_state exists in the checkpoint."
                     )
-            else:
-                if "gpu_rng_state" in rng_state:
-                    logging.warning(
-                        "There exists gpu_rng_state in checkpoint but the system has no gpu."
-                    )
+            elif "gpu_rng_state" in rng_state:
+                logging.warning(
+                    "There exists gpu_rng_state in checkpoint but the system has no gpu."
+                )
         else:
             logging.warning("The checkpoint has no random state to restore.")
 

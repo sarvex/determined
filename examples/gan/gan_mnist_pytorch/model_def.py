@@ -83,9 +83,7 @@ class Discriminator(nn.Module):
 
     def forward(self, img):
         img_flat = img.contiguous().view(img.size(0), -1)
-        validity = self.model(img_flat)
-
-        return validity
+        return self.model(img_flat)
 
 
 class GANTrial(PyTorchTrial):

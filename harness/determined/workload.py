@@ -31,10 +31,7 @@ class Workload:
         self.total_batches_processed = total_batches_processed
 
     def __eq__(self, other: object) -> bool:
-        if type(self) is not type(other):
-            return False
-
-        return self.__dict__ == other.__dict__
+        return self.__dict__ == other.__dict__ if type(self) is type(other) else False
 
     def __hash__(self) -> int:
         return hash((self.kind, self.experiment_id, self.trial_id, self.step_id))

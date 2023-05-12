@@ -149,9 +149,8 @@ class NetworkCIFAR(nn.Module):
         s0 = s1 = self.stem(input)
         for i, cell in enumerate(self.cells):
             s0, s1 = s1, cell(s0, s1, self.drop_path_prob)
-            if i == 2 * self._layers // 3:
-                if self._auxiliary and self.training:
-                    logits_aux = self.auxiliary_head(s1)
+            if i == 2 * self._layers // 3 and self._auxiliary and self.training:
+                logits_aux = self.auxiliary_head(s1)
         out = self.global_pooling(s1)
         logits = self.classifier(out.contiguous().view(out.size(0), -1))
         return logits, logits_aux
@@ -207,9 +206,8 @@ class NetworkImageNet(nn.Module):
         s1 = self.stem1(s0)
         for i, cell in enumerate(self.cells):
             s0, s1 = s1, cell(s0, s1, self.drop_path_prob)
-            if i == 2 * self._layers // 3:
-                if self._auxiliary and self.training:
-                    logits_aux = self.auxiliary_head(s1)
+            if i == 2 * self._layers // 3 and self._auxiliary and self.training:
+                logits_aux = self.auxiliary_head(s1)
         out = self.global_pooling(s1)
         logits = self.classifier(out.contiguous().view(out.size(0), -1))
         return logits, logits_aux

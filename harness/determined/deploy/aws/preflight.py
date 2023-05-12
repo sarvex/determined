@@ -41,11 +41,9 @@ def get_instance_type_quota_code(instance_type: str, spot: bool = False) -> str:
     if not match:
         raise PreflightFailure("can't detect instance class")
 
-    instance_class = match.group(1).capitalize()
+    instance_class = match[1].capitalize()
     quota_map = SPOT_QUOTA_CODES if spot else ON_DEMAND_QUOTA_CODES
-    quota_code = quota_map.get(instance_class, quota_map[None])
-
-    return quota_code
+    return quota_map.get(instance_class, quota_map[None])
 
 
 def fetch_instance_type_quota(boto_session: boto3.session.Session, quota_code: str) -> int:
@@ -54,7 +52,7 @@ def fetch_instance_type_quota(boto_session: boto3.session.Session, quota_code: s
         quota_data = client.get_service_quota(ServiceCode="ec2", QuotaCode=quota_code)
         return int(quota_data["Quota"]["Value"])
     except ClientError as ex:
-        raise PreflightFailure("failed to fetch service quota: %s" % ex)
+        raise PreflightFailure(f"failed to fetch service quota: {ex}")
 
 
 # CloudFront templates use a set of built-in functions such as
@@ -112,17 +110,16 @@ def check_quotas(det_config: Dict[str, Any], deployment_object: DeterminedDeploy
 
         vcpus_required = int(vcpu_mapping[gpu_instance_type]["vcpu"] * max_agents)
     except PreflightFailure as ex:
-        print(colored("Failed to check AWS instance quota: %s" % ex, "yellow"))
+        print(colored(f"Failed to check AWS instance quota: {ex}", "yellow"))
         return
     except Exception as ex:
-        print(colored("Error while checking AWS instance quota: %s" % ex, "yellow"))
+        print(colored(f"Error while checking AWS instance quota: {ex}", "yellow"))
         return
 
     if vcpus_required > vcpu_quota:
         print(
             colored(
-                "Insufficient AWS GPU agent instance quota (available: %s, required: %s)"
-                % (vcpu_quota, vcpus_required),
+                f"Insufficient AWS GPU agent instance quota (available: {vcpu_quota}, required: {vcpus_required})",
                 "red",
             )
         )
@@ -131,6 +128,6 @@ def check_quotas(det_config: Dict[str, Any], deployment_object: DeterminedDeploy
             "https://%s.console.aws.amazon.com/servicequotas/home/services/ec2/quotas"
             % boto_session.region_name
         )
-        print("Required quota code: %s" % quota_code)
+        print(f"Required quota code: {quota_code}")
         print("This check can be skipped via `det deploy --no-preflight-checks ...`")
         sys.exit(1)

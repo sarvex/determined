@@ -95,26 +95,24 @@ class GAEASearchTrial(PyTorchTrial):
 
         self.train_data = bilevel_data
 
-        train_queue = DataLoader(
+        return DataLoader(
             bilevel_data,
             batch_size=self.context.get_per_slot_batch_size(),
             shuffle=True,
             num_workers=2,
         )
-        return train_queue
 
     def build_validation_data_loader(self) -> DataLoader:
         _, valid_transform = data_transforms_cifar10()
         valid_data = dset.CIFAR10(
             root=self.data_dir, train=False, download=True, transform=valid_transform
         )
-        valid_queue = DataLoader(
+        return DataLoader(
             valid_data,
             batch_size=self.context.get_per_slot_batch_size(),
             shuffle=False,
             num_workers=2,
         )
-        return valid_queue
 
     def train_batch(
         self, batch: TorchData, epoch_idx: int, batch_idx: int

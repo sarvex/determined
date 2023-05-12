@@ -33,13 +33,12 @@ class S3Backend:
         tokens = filepath.split("/")
         directory = tokens[-2]
         filename = tokens[-1]
-        return "{}/{}".format(directory, filename)
+        return f"{directory}/{filename}"
 
     def get(self, filepath):
         filepath = self.convert_filepath(filepath)
         obj = self._storage_client.get_object(Bucket=self._bucket, Key=filepath)
-        img_str = obj["Body"].read()
-        return img_str
+        return obj["Body"].read()
 
 
 class GCSBackend:
@@ -51,13 +50,12 @@ class GCSBackend:
         tokens = filepath.split("/")
         directory = tokens[-2]
         filename = tokens[-1]
-        return "{}/{}".format(directory, filename)
+        return f"{directory}/{filename}"
 
     def get(self, filepath):
         filepath = self.convert_filepath(filepath)
         blob = self._bucket.blob(filepath)
-        img_str = download_gcs_blob_with_backoff(blob)
-        return img_str
+        return download_gcs_blob_with_backoff(blob)
 
 
 class FakeBackend:
@@ -147,9 +145,7 @@ class CocoDetection(torchvision.datasets.CocoDetection):
 
     def __len__(self):
         # If using fake data, we'll limit the dataset to 1000 examples.
-        if isinstance(self.backend, FakeBackend):
-            return 1000
-        return len(self.ids)
+        return 1000 if isinstance(self.backend, FakeBackend) else len(self.ids)
 
 
 def build_dataset(image_set, args):
@@ -162,7 +158,7 @@ def build_dataset(image_set, args):
     catIds = [] if "cat_ids" not in args else args.cat_ids
 
     img_folder, ann_file = PATHS[image_set]
-    dataset = CocoDetection(
+    return CocoDetection(
         args.backend,
         args.data_dir,
         img_folder,
@@ -171,4 +167,3 @@ def build_dataset(image_set, args):
         return_masks=args.masks,
         catIds=catIds,
     )
-    return dataset

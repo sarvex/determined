@@ -42,30 +42,23 @@ def get_shell_id() -> str:
 
 
 def get_proxy_addr() -> str:
-    # The Determined proxying code relies on docker port-mapping container ports to host
-    # ports, and it uses the IP address of the agent as a way to address spawned
-    # docker containers. This breaks down when running in a docker compose
-    # environment, because the address of the agent is not the address of the
-    # docker host. As a work-around, force agents to report their IP address as the
-    # IP address of the host machine.
     if "darwin" in sys.platform:
         # On macOS, docker runs in a VM and host.docker.internal points to the IP
         # address of this VM.
         return "host.docker.internal"
-    else:
-        # On non-macOS, host.docker.internal does not exist. Instead, grab the source IP
-        # address we would use if we had to talk to the internet. The sed command
-        # searches the first line of its input for "src" and prints the first field
-        # after that.
-        proxy_addr_args = ["ip", "route", "get", "8.8.8.8"]
-        pattern = r"s|.* src +(\S+).*|\1|"
-        s = subprocess.check_output(proxy_addr_args, encoding="utf-8")
-        matches = re.match(pattern, s)
-        if matches is not None:
-            groups: Sequence[str] = matches.groups()
-            if len(groups) != 0:
-                return groups[0]
-        return ""
+    # On non-macOS, host.docker.internal does not exist. Instead, grab the source IP
+    # address we would use if we had to talk to the internet. The sed command
+    # searches the first line of its input for "src" and prints the first field
+    # after that.
+    proxy_addr_args = ["ip", "route", "get", "8.8.8.8"]
+    pattern = r"s|.* src +(\S+).*|\1|"
+    s = subprocess.check_output(proxy_addr_args, encoding="utf-8")
+    matches = re.match(pattern, s)
+    if matches is not None:
+        groups: Sequence[str] = matches.groups()
+        if len(groups) != 0:
+            return groups[0]
+    return ""
 
 
 def docker_compose(
@@ -79,7 +72,7 @@ def docker_compose(
     process_env = dict(os.environ)
     if env is not None:
         # raise ValueError(str(env))
-        process_env.update(env)
+        process_env |= env
     process_env["INTEGRATIONS_PROXY_ADDR"] = get_proxy_addr()
     base_command = ["docker-compose", "-f", str(path), "-p", cluster_name]
     if extra_files is not None:
@@ -117,11 +110,7 @@ def master_up(
         image_repo_prefix = "determinedai"
     if version is None:
         version = determined.__version__
-    if autorestart:
-        restart_policy = "unless-stopped"
-    else:
-        restart_policy = "no"
-
+    restart_policy = "unless-stopped" if autorestart else "no"
     env = {
         "INTEGRATIONS_HOST_PORT": str(port),
         "DET_MASTER_CONFIG": str(master_config_path),
@@ -185,7 +174,7 @@ def cluster_up(
         cluster_name=cluster_name,
     )
     for agent_number in range(num_agents):
-        agent_name = cluster_name + f"-agent-{agent_number}"
+        agent_name = f"{cluster_name}-agent-{agent_number}"
         labels = {"determined.cluster": cluster_name}
         agent_up(
             master_host="localhost",

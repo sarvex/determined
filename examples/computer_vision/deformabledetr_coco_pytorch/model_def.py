@@ -35,12 +35,7 @@ TorchData = Union[Dict[str, torch.Tensor], Sequence[torch.Tensor], torch.Tensor]
 
 
 def match_name_keywords(n, name_keywords):
-    out = False
-    for b in name_keywords:
-        if b in n:
-            out = True
-            break
-    return out
+    return any(b in n for b in name_keywords)
 
 
 class COCOReducer(MetricReducer):
@@ -84,14 +79,14 @@ class COCOReducer(MetricReducer):
 
         coco_stats = coco_evaluator.coco_eval["bbox"].stats.tolist()
 
-        loss_dict = {}
-        loss_dict["mAP"] = coco_stats[0]
-        loss_dict["mAP_50"] = coco_stats[1]
-        loss_dict["mAP_75"] = coco_stats[2]
-        loss_dict["mAP_small"] = coco_stats[3]
-        loss_dict["mAP_medium"] = coco_stats[4]
-        loss_dict["mAP_large"] = coco_stats[5]
-        return loss_dict
+        return {
+            "mAP": coco_stats[0],
+            "mAP_50": coco_stats[1],
+            "mAP_75": coco_stats[2],
+            "mAP_small": coco_stats[3],
+            "mAP_medium": coco_stats[4],
+            "mAP_large": coco_stats[5],
+        }
 
 
 class DeformableDETRTrial(PyTorchTrial):
@@ -104,10 +99,8 @@ class DeformableDETRTrial(PyTorchTrial):
             # Use a file lock so only one worker on each node does the download.
             with filelock.FileLock(os.path.join(self.hparams.data_dir, "download.lock")):
                 if not all(
-                    [
-                        os.path.isdir(os.path.join(self.hparams.data_dir, d))
-                        for d in ["train2017", "val2017"]
-                    ]
+                    os.path.isdir(os.path.join(self.hparams.data_dir, d))
+                    for d in ["train2017", "val2017"]
                 ):
                     download_coco_from_source(self.hparams.data_dir)
 

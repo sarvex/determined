@@ -26,8 +26,7 @@ def generate_and_plot_images(generator: tf.keras.Sequential, noise_dim: int) -> 
 
 def export_model(experiment_id: int) -> tf.keras.Model:
     checkpoint = client.get_experiment(experiment_id).top_checkpoint()
-    model = checkpoint.load()
-    return model
+    return checkpoint.load()
 
 
 def main():

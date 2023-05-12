@@ -148,16 +148,16 @@ def dev_tests(config):
 def cleanup_video_artifacts(config):
     items = os.listdir(videos_dir)
     for item in items:
-        if item.endswith(tuple([".jpeg", ".jpg", ".png"])):
+        if item.endswith((".jpeg", ".jpg", ".png")):
             os.remove(os.path.join(videos_dir, item))
 
 
 def get_config(args):
-    config = {}
-    config["DET_PORT"] = args.det_port
-    config["CLUSTER_NAME"] = f"det_test_{args.det_port}"
-    config["DET_MASTER"] = f"{args.det_host}:{args.det_port}"
-
+    config = {
+        "DET_PORT": args.det_port,
+        "CLUSTER_NAME": f"det_test_{args.det_port}",
+        "DET_MASTER": f"{args.det_host}:{args.det_port}",
+    }
     env = {}
     for var in ["DISPLAY", "PATH", "XAUTHORITY", "TERM"]:
         value = os.environ.get(var)

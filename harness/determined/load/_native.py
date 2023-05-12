@@ -119,11 +119,8 @@ def get_trial_from_native(
 
     with RunpyGlobals(env, hvd_config, rendezvous_info) as loader:
         with overwrite_sys_args(command):
-            try:
+            with contextlib.suppress(det.errors.StopLoadingImplementation):
                 runpy.run_path(command[0], run_name="__main__")
-            except det.errors.StopLoadingImplementation:
-                # If caught this exception, will skip running the rest of the user code.
-                pass
         return loader.get_runpy_result()
 
 

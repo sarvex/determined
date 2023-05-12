@@ -10,9 +10,12 @@ from .gcp.cli import args_description as gcp_args_description
 from .local.cli import args_description as local_args_description
 
 args_subs: List[Union[Arg, Cmd]] = [
-    # TODO(DET-5171): Remove --version flag when det-deploy is deprecated.
-    Arg("--version", action="version", version="%(prog)s {}".format(__version__)),
-    Arg("--no-preflight-checks", action="store_true", help="Disable preflight checks"),
+    Arg("--version", action="version", version=f"%(prog)s {__version__}"),
+    Arg(
+        "--no-preflight-checks",
+        action="store_true",
+        help="Disable preflight checks",
+    ),
     Arg(
         "--no-wait-for-master",
         action="store_true",
@@ -50,7 +53,7 @@ def main() -> None:
     v = vars(parsed_args)
     if not v.get("func"):
         parser.print_usage()
-        parser.exit(2, "{}: no subcommand specified\n".format(parser.prog))
+        parser.exit(2, f"{parser.prog}: no subcommand specified\n")
 
     warnings.warn(
         "`det-deploy` executable is deprecated, please use `det deploy` instead.", FutureWarning

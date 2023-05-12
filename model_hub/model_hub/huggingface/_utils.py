@@ -18,7 +18,7 @@ def compute_num_training_steps(experiment_config: Dict, global_batch_size: int) 
             "configuration, which is needed to configure the learning rate scheduler."
         )
     # Otherwise, max_length_unit=='records'
-    return int(max_length / global_batch_size)
+    return max_length // global_batch_size
 
 
 """

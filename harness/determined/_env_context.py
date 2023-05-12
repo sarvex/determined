@@ -114,11 +114,7 @@ class EnvContext:
 
     @property
     def master_url(self) -> str:
-        return "{}://{}:{}".format(
-            "https" if self.use_tls else "http",
-            self.master_addr,
-            self.master_port,
-        )
+        return f'{"https" if self.use_tls else "http"}://{self.master_addr}:{self.master_port}'
 
     @property
     def per_slot_batch_size(self) -> int:

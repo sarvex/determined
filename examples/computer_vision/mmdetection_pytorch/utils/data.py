@@ -28,13 +28,12 @@ class GCSBackend(BaseStorageBackend):
         tokens = filepath.split("/")
         directory = tokens[-2]
         filename = tokens[-1]
-        return "{}/{}".format(directory, filename)
+        return f"{directory}/{filename}"
 
     def get(self, filepath):
         filepath = self.convert_filepath(filepath)
         blob = self._bucket.blob(filepath)
-        img_str = download_gcs_blob_with_backoff(blob)
-        return img_str
+        return download_gcs_blob_with_backoff(blob)
 
     def get_text(self, filepath):
         return NotImplementedError
@@ -161,20 +160,19 @@ def sub_backend(backend, cfg):
     a file from a GCS bucket.
     """
     if type(cfg) in [Config, ConfigDict]:
-        backend_cfg = {
-            "gcs": {"backend": "gcs", "bucket_name": "determined-ai-coco-dataset"},
-            "fake": {"backend": "fake"},
-        }
-
         if "type" in cfg and cfg["type"] == "LoadImageFromFile":
+            backend_cfg = {
+                "gcs": {"backend": "gcs", "bucket_name": "determined-ai-coco-dataset"},
+                "fake": {"backend": "fake"},
+            }
+
             cfg["file_client_args"] = backend_cfg[backend]
         else:
             for k in cfg:
                 sub_backend(backend, cfg[k])
-    else:
-        if isinstance(cfg, list):
-            for i in cfg:
-                sub_backend(backend, i)
+    elif isinstance(cfg, list):
+        for i in cfg:
+            sub_backend(backend, i)
 
 
 def decontainer(data):

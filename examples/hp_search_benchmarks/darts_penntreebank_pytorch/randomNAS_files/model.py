@@ -30,7 +30,7 @@ class DARTSCell(nn.Module):
                 nn.Parameter(
                     torch.Tensor(nhid, 2 * nhid).uniform_(-INITRANGE, INITRANGE)
                 )
-                for i in range(steps)
+                for _ in range(steps)
             ]
         )
 
@@ -59,8 +59,7 @@ class DARTSCell(nn.Module):
         c0, h0 = torch.split(xh_prev.mm(self._W0), self.nhid, dim=-1)
         c0 = c0.sigmoid()
         h0 = self._get_activation(self.init_op)(h0)
-        s0 = h_prev + c0 * (h0 - h_prev)
-        return s0
+        return h_prev + c0 * (h0 - h_prev)
 
     def _get_activation(self, name):
         if name == "tanh":
@@ -91,10 +90,9 @@ class DARTSCell(nn.Module):
             h = fn(h)
             s = s_prev + c * (h - s_prev)
             states += [s]
-        output = torch.mean(
+        return torch.mean(
             torch.stack([states[i] for i in self.genotype.concat], -1), -1
         )
-        return output
 
 
 class RNNModel(nn.Module):
@@ -157,7 +155,6 @@ class RNNModel(nn.Module):
         raw_output = emb
         new_hidden = []
         raw_outputs = []
-        outputs = []
         for l, rnn in enumerate(self.rnns):
             current_input = raw_output
             raw_output, new_h = rnn(raw_output, hidden[l])
@@ -166,8 +163,7 @@ class RNNModel(nn.Module):
         hidden = new_hidden
 
         output = self.lockdrop(raw_output, self.dropout)
-        outputs.append(output)
-
+        outputs = [output]
         logit = self.decoder(output.contiguous().view(-1, self.ninp))
         log_prob = nn.functional.log_softmax(logit, dim=-1)
         model_output = log_prob

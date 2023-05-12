@@ -113,8 +113,7 @@ class SetCriterion(nn.Module):
         # Count the number of predictions that are NOT "no-object" (which is the last class)
         card_pred = (pred_logits.argmax(-1) != pred_logits.shape[-1] - 1).sum(1)
         card_err = F.l1_loss(card_pred.float(), tgt_lengths.float())
-        losses = {"cardinality_error": card_err}
-        return losses
+        return {"cardinality_error": card_err}
 
     def loss_boxes(self, outputs, targets, indices, num_boxes):
         """Compute the losses related to the bounding boxes, the L1 regression loss and the GIoU loss
@@ -130,9 +129,7 @@ class SetCriterion(nn.Module):
 
         loss_bbox = F.l1_loss(src_boxes, target_boxes, reduction="none")
 
-        losses = {}
-        losses["loss_bbox"] = loss_bbox.sum() / num_boxes
-
+        losses = {"loss_bbox": loss_bbox.sum() / num_boxes}
         loss_giou = 1 - torch.diag(
             box_ops.generalized_box_iou(
                 box_ops.box_cxcywh_to_xyxy(src_boxes),
@@ -171,11 +168,10 @@ class SetCriterion(nn.Module):
 
         target_masks = target_masks[tgt_idx].flatten(1)
 
-        losses = {
+        return {
             "loss_mask": sigmoid_focal_loss(src_masks, target_masks, num_boxes),
             "loss_dice": dice_loss(src_masks, target_masks, num_boxes),
         }
-        return losses
 
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
@@ -213,7 +209,7 @@ class SetCriterion(nn.Module):
         outputs_without_aux = {
             k: v
             for k, v in outputs.items()
-            if k != "aux_outputs" and k != "enc_outputs"
+            if k not in ["aux_outputs", "enc_outputs"]
         }
 
         # Retrieve the matching between the outputs of the last layer and the targets
@@ -233,9 +229,7 @@ class SetCriterion(nn.Module):
         losses = {}
         for loss in self.losses:
             kwargs = {}
-            losses.update(
-                self.get_loss(loss, outputs, targets, indices, num_boxes, **kwargs)
-            )
+            losses |= self.get_loss(loss, outputs, targets, indices, num_boxes, **kwargs)
 
         # In case of auxiliary losses, we repeat this process with the output of each intermediate layer.
         if "aux_outputs" in outputs:
@@ -252,7 +246,7 @@ class SetCriterion(nn.Module):
                     l_dict = self.get_loss(
                         loss, aux_outputs, targets, indices, num_boxes, **kwargs
                     )
-                    l_dict = {k + f"_{i}": v for k, v in l_dict.items()}
+                    l_dict = {f"{k}_{i}": v for k, v in l_dict.items()}
                     losses.update(l_dict)
 
         if "enc_outputs" in outputs:
@@ -272,7 +266,7 @@ class SetCriterion(nn.Module):
                 l_dict = self.get_loss(
                     loss, enc_outputs, bin_targets, indices, num_boxes, **kwargs
                 )
-                l_dict = {k + f"_enc": v for k, v in l_dict.items()}
+                l_dict = {f"{k}_enc": v for k, v in l_dict.items()}
                 losses.update(l_dict)
 
         return losses
@@ -305,15 +299,18 @@ def build_model(args, world_size):
         two_stage=args.two_stage,
     )
     matcher = build_matcher(args)
-    weight_dict = {"loss_ce": args.cls_loss_coef, "loss_bbox": args.bbox_loss_coef}
-    weight_dict["loss_giou"] = args.giou_loss_coef
+    weight_dict = {
+        "loss_ce": args.cls_loss_coef,
+        "loss_bbox": args.bbox_loss_coef,
+        "loss_giou": args.giou_loss_coef,
+    }
     # Add weights for aux_loss items which are then used in model_def.DETRTrial.train_batch
     # to compute the weighted loss.
     if args.aux_loss:
         aux_weight_dict = {}
         for i in range(args.dec_layers - 1):
-            aux_weight_dict.update({k + f"_{i}": v for k, v in weight_dict.items()})
-        weight_dict.update(aux_weight_dict)
+            aux_weight_dict |= {f"{k}_{i}": v for k, v in weight_dict.items()}
+        weight_dict |= aux_weight_dict
 
     losses = ["labels", "boxes", "cardinality"]
     criterion = SetCriterion(

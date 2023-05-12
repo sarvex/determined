@@ -29,13 +29,13 @@ def collate(batch, samples_per_gpu=1):
     if isinstance(batch[0], DataContainer):
         stacked = []
         if batch[0].cpu_only:
-            for i in range(0, len(batch), samples_per_gpu):
-                stacked.append(
-                    [sample.data for sample in batch[i : i + samples_per_gpu]]
-                )
+            stacked.extend(
+                [sample.data for sample in batch[i : i + samples_per_gpu]]
+                for i in range(0, len(batch), samples_per_gpu)
+            )
             return stacked
-            # return DataContainer(
-            #    stacked, batch[0].stack, batch[0].padding_value, cpu_only=True)
+                    # return DataContainer(
+                    #    stacked, batch[0].stack, batch[0].padding_value, cpu_only=True)
         elif batch[0].stack:
             for i in range(0, len(batch), samples_per_gpu):
                 assert isinstance(batch[i].data, torch.Tensor)
@@ -62,22 +62,19 @@ def collate(batch, samples_per_gpu=1):
                             F.pad(sample.data, pad, value=sample.padding_value)
                         )
                     stacked.append(default_collate(padded_samples))
-                elif batch[i].pad_dims is None:
+                else:
                     stacked.append(
                         default_collate(
                             [sample.data for sample in batch[i : i + samples_per_gpu]]
                         )
                     )
-                else:
-                    raise ValueError("pad_dims should be either None or integers (1-3)")
-
         else:
-            for i in range(0, len(batch), samples_per_gpu):
-                stacked.append(
-                    [sample.data for sample in batch[i : i + samples_per_gpu]]
-                )
+            stacked.extend(
+                [sample.data for sample in batch[i : i + samples_per_gpu]]
+                for i in range(0, len(batch), samples_per_gpu)
+            )
         return stacked
-        # return DataContainer(stacked, batch[0].stack, batch[0].padding_value)
+            # return DataContainer(stacked, batch[0].stack, batch[0].padding_value)
     elif isinstance(batch[0], Sequence):
         transposed = zip(*batch)
         return [collate(samples, samples_per_gpu) for samples in transposed]

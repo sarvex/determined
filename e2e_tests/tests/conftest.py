@@ -143,7 +143,7 @@ def using_k8s(request: SubRequest) -> bool:
     output = subprocess.check_output(command, universal_newlines=True, stderr=subprocess.PIPE)
 
     rp = json.loads(output)["resource_manager"]["type"]
-    return bool(rp == "kubernetes")
+    return rp == "kubernetes"
 
 
 @pytest.fixture(autouse=True)

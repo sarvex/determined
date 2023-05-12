@@ -42,14 +42,7 @@ class SocketManager(workload.Source):
     def __init__(self, env: det.EnvContext) -> None:
         self.env = env
 
-        url = "{}://{}:{}/ws/trial/{}/{}/{}".format(
-            "wss" if self.env.use_tls else "ws",
-            self.env.master_addr,
-            self.env.master_port,
-            self.env.initial_workload.experiment_id,
-            self.env.initial_workload.trial_id,
-            self.env.container_id,
-        )
+        url = f'{"wss" if self.env.use_tls else "ws"}://{self.env.master_addr}:{self.env.master_port}/ws/trial/{self.env.initial_workload.experiment_id}/{self.env.initial_workload.trial_id}/{self.env.container_id}'
 
         # Disable reading proxy configuration because we shouldn't proxy our
         # own connection to the master.
@@ -165,11 +158,10 @@ class SocketManager(workload.Source):
             return
         elif isinstance(event, lomond.events.Text):
             msg = simplejson.loads(event.text)
-            if msg["type"] == "RUN_WORKLOAD":
-                wkld = workload.Workload.from_json(msg["workload"])
-                yield from self.yield_workload(wkld)
-            else:
+            if msg["type"] != "RUN_WORKLOAD":
                 raise NotImplementedError(f"Unrecognized message: {msg}")
+            wkld = workload.Workload.from_json(msg["workload"])
+            yield from self.yield_workload(wkld)
         else:
             logging.warning(f"Unexpected websocket event: {event}")
 

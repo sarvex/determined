@@ -44,8 +44,7 @@ def _set_command_default(
         exp_rel_path = exp_path.relative_to(context_dir.resolve())
         if exp_rel_path.suffix in {"py", "ipynb"}:
             raise errors.InvalidExperimentException(
-                "Command must begin with a file with the suffix .py or .ipynb. "
-                "Found {}".format(command)
+                f"Command must begin with a file with the suffix .py or .ipynb. Found {command}"
             )
 
         command = [str(exp_rel_path), *_get_current_args()]
@@ -60,7 +59,7 @@ def _submit_experiment(
     test: bool = False,
     master_url: Optional[str] = None,
 ) -> int:
-    if context_dir == "":
+    if not context_dir:
         raise errors.InvalidExperimentException("Cannot specify the context directory to be empty.")
 
     context_path = pathlib.Path(context_dir)

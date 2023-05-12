@@ -58,7 +58,9 @@ def trial_class_from_entrypoint(entrypoint_spec: str) -> Type[det.Trial]:
             obj = getattr(obj, attr)
 
     check.check_issubclass(
-        obj, det.Trial, "Invalid type for specified 'entrypoint' ({})".format(entrypoint_spec)
+        obj,
+        det.Trial,
+        f"Invalid type for specified 'entrypoint' ({entrypoint_spec})",
     )
 
     return cast(Type[det.Trial], obj)
@@ -119,12 +121,11 @@ def prepare_controller(
     """
 
     if env.experiment_config.native_enabled():
-        controller = load.load_native(env, workloads, load_path, rendezvous_info, hvd_config)
-    else:
-        trial_class = trial_class_from_entrypoint(env.experiment_config["entrypoint"])
-        controller = load_trial(trial_class, env, workloads, load_path, rendezvous_info, hvd_config)
-
-    return controller
+        return load.load_native(env, workloads, load_path, rendezvous_info, hvd_config)
+    trial_class = trial_class_from_entrypoint(env.experiment_config["entrypoint"])
+    return load_trial(
+        trial_class, env, workloads, load_path, rendezvous_info, hvd_config
+    )
 
 
 def prepare_tensorboard(

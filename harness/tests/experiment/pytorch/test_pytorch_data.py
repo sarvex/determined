@@ -72,12 +72,12 @@ def test_distributed_batch_sampler():
 
     num_replicas = 4
 
-    expected_samples = []
-    expected_samples.append([[0, 1], [8, 9], [16, 17]])
-    expected_samples.append([[2, 3], [10, 11], [18]])
-    expected_samples.append([[4, 5], [12, 13]])
-    expected_samples.append([[6, 7], [14, 15]])
-
+    expected_samples = [
+        [[0, 1], [8, 9], [16, 17]],
+        [[2, 3], [10, 11], [18]],
+        [[4, 5], [12, 13]],
+        [[6, 7], [14, 15]],
+    ]
     for rank in range(num_replicas):
         dist_sampler = DistributedBatchSampler(sampler, 4, rank)
         samples = list(dist_sampler)

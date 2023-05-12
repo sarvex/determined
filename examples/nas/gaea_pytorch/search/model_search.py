@@ -80,7 +80,7 @@ class Cell(nn.Module):
 
         states = [s0, s1]
         offset = 0
-        for i in range(self._steps):
+        for _ in range(self._steps):
             s = sum(
                 weights2[offset + j] * self._ops[offset + j](h, weights[offset + j])
                 for j, h in enumerate(states)
@@ -149,12 +149,12 @@ class Network(nn.Module):
     def forward(self, input):
         s0 = s1 = self.stem(input)
         for i, cell in enumerate(self.cells):
+            n = 3
+            start = 2
             if cell.reduction:
                 weights = F.softmax(self.alphas_reduce, dim=-1)
-                n = 3
-                start = 2
-                weights2 = F.softmax(self.betas_reduce[0:2], dim=-1)
-                for i in range(self._steps - 1):
+                weights2 = F.softmax(self.betas_reduce[:2], dim=-1)
+                for _ in range(self._steps - 1):
                     end = start + n
                     tw2 = F.softmax(self.betas_reduce[start:end], dim=-1)
                     start = end
@@ -162,10 +162,8 @@ class Network(nn.Module):
                     weights2 = torch.cat([weights2, tw2], dim=0)
             else:
                 weights = F.softmax(self.alphas_normal, dim=-1)
-                n = 3
-                start = 2
-                weights2 = F.softmax(self.betas_normal[0:2], dim=-1)
-                for i in range(self._steps - 1):
+                weights2 = F.softmax(self.betas_normal[:2], dim=-1)
+                for _ in range(self._steps - 1):
                     end = start + n
                     tw2 = F.softmax(self.betas_normal[start:end], dim=-1)
                     start = end
@@ -173,8 +171,7 @@ class Network(nn.Module):
                     weights2 = torch.cat([weights2, tw2], dim=0)
             s0, s1 = s1, cell(s0, s1, weights, weights2)
         out = self.global_pooling(s1)
-        logits = self.classifier(out.contiguous().view(out.size(0), -1))
-        return logits
+        return self.classifier(out.contiguous().view(out.size(0), -1))
 
     def _loss(self, input, target):
         logits = self(input)
@@ -225,9 +222,10 @@ class Network(nn.Module):
                 for j in edges:
                     k_best = None
                     for k in range(len(W[j])):
-                        if k != PRIMITIVES.index("none"):
-                            if k_best is None or W[j][k] > W[j][k_best]:
-                                k_best = k
+                        if k != PRIMITIVES.index("none") and (
+                            k_best is None or W[j][k] > W[j][k_best]
+                        ):
+                            k_best = k
                     gene.append((PRIMITIVES[k_best], j))
                 start = end
                 n += 1
@@ -235,8 +233,8 @@ class Network(nn.Module):
 
         n = 3
         start = 2
-        weightsr2 = F.softmax(self.betas_reduce[0:2], dim=-1)
-        weightsn2 = F.softmax(self.betas_normal[0:2], dim=-1)
+        weightsr2 = F.softmax(self.betas_reduce[:2], dim=-1)
+        weightsn2 = F.softmax(self.betas_normal[:2], dim=-1)
         for i in range(self._steps - 1):
             end = start + n
             tw2 = F.softmax(self.betas_reduce[start:end], dim=-1)

@@ -149,9 +149,7 @@ def gen_sphinx_table(licenses: List[License]) -> str:
     ]
 
     for license in licenses:
-        lines.append(f"   * - {license.name}")
-        lines.append(f"     - {license.sphinx_ref()}")
-
+        lines.extend((f"   * - {license.name}", f"     - {license.sphinx_ref()}"))
     return "\n".join(lines)
 
 
@@ -179,9 +177,7 @@ def build_sphinx(licenses: List[License]) -> str:
         gen_sphinx_table([license for license in licenses if license.agent]),
     ]
 
-    for license in licenses:
-        paragraphs.append(license.sphinx_entry())
-
+    paragraphs.extend(license.sphinx_entry() for license in licenses)
     return "\n\n".join(paragraphs)
 
 
@@ -194,9 +190,7 @@ def build_ascii(licenses: List[License], our_license_path: str) -> str:
         "This software is bundled with each of the following projects, in part or in whole:",
     ]
 
-    for license in licenses:
-        paragraphs.append(license.ascii_entry())
-
+    paragraphs.extend(license.ascii_entry() for license in licenses)
     return "\n\n".join(paragraphs)
 
 

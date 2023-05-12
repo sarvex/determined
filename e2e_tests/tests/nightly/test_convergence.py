@@ -21,12 +21,9 @@ def test_mnist_pytorch_accuracy() -> None:
     ]
 
     target_accuracy = 0.97
-    assert max(validation_accuracies) > target_accuracy, (
-        "mnist_pytorch did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'mnist_pytorch did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -47,12 +44,9 @@ def test_fashion_mnist_tf_keras() -> None:
     ]
 
     target_accuracy = 0.85
-    assert max(validation_accuracies) > target_accuracy, (
-        "fashion_mnist_tf_keras did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'fashion_mnist_tf_keras did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -72,12 +66,9 @@ def test_cifar10_pytorch_accuracy() -> None:
     ]
 
     target_accuracy = 0.73
-    assert max(validation_accuracies) > target_accuracy, (
-        "cifar10_pytorch did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'cifar10_pytorch did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -98,12 +89,9 @@ def test_fasterrcnn_coco_pytorch_accuracy() -> None:
     ]
 
     target_iou = 0.42
-    assert max(validation_iou) > target_iou, (
-        "fasterrcnn_coco_pytorch did not reach minimum target accuracy {} in {} steps."
-        " full validation avg_iou history: {}".format(
-            target_iou, len(trial_metrics["steps"]), validation_iou
-        )
-    )
+    assert (
+        max(validation_iou) > target_iou
+    ), f'fasterrcnn_coco_pytorch did not reach minimum target accuracy {target_iou} in {len(trial_metrics["steps"])} steps. full validation avg_iou history: {validation_iou}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -123,12 +111,9 @@ def test_mnist_estimator_accuracy() -> None:
     ]
 
     target_accuracy = 0.95
-    assert max(validation_accuracies) > target_accuracy, (
-        "mnist_estimator did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'mnist_estimator did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -148,12 +133,9 @@ def test_mnist_tf_layers_accuracy() -> None:
     ]
 
     target_error = 0.04
-    assert min(validation_errors) < target_error, (
-        "mnist_estimator did not reach minimum target error {} in {} steps."
-        " full validation error history: {}".format(
-            target_error, len(trial_metrics["steps"]), validation_errors
-        )
-    )
+    assert (
+        min(validation_errors) < target_error
+    ), f'mnist_estimator did not reach minimum target error {target_error} in {len(trial_metrics["steps"])} steps. full validation error history: {validation_errors}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -173,12 +155,9 @@ def test_cifar10_tf_keras_accuracy() -> None:
     ]
 
     target_accuracy = 0.73
-    assert max(validation_accuracies) > target_accuracy, (
-        "cifar10_pytorch did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'cifar10_pytorch did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -199,12 +178,9 @@ def test_iris_tf_keras_accuracy() -> None:
     ]
 
     target_accuracy = 0.95
-    assert max(validation_accuracies) > target_accuracy, (
-        "iris_tf_keras did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'iris_tf_keras did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -225,12 +201,9 @@ def test_unets_tf_keras_accuracy() -> None:
     ]
 
     target_accuracy = 0.85
-    assert max(validation_accuracies) > target_accuracy, (
-        "unets_tf_keras did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'unets_tf_keras did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -250,12 +223,9 @@ def test_gbt_titanic_estimator_accuracy() -> None:
     ]
 
     target_accuracy = 0.74
-    assert max(validation_accuracies) > target_accuracy, (
-        "gbt_titanic_estimator did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'gbt_titanic_estimator did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -275,12 +245,9 @@ def test_data_layer_mnist_estimator_accuracy() -> None:
     ]
 
     target_accuracy = 0.92
-    assert max(validation_accuracies) > target_accuracy, (
-        "data_layer_mnist_estimator did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'data_layer_mnist_estimator did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'
 
 
 @pytest.mark.nightly  # type: ignore
@@ -300,9 +267,6 @@ def test_data_layer_mnist_tf_keras_accuracy() -> None:
     ]
 
     target_accuracy = 0.97
-    assert max(validation_accuracies) > target_accuracy, (
-        "data_layer_mnist_tf_keras did not reach minimum target accuracy {} in {} steps."
-        " full validation accuracy history: {}".format(
-            target_accuracy, len(trial_metrics["steps"]), validation_accuracies
-        )
-    )
+    assert (
+        max(validation_accuracies) > target_accuracy
+    ), f'data_layer_mnist_tf_keras did not reach minimum target accuracy {target_accuracy} in {len(trial_metrics["steps"])} steps. full validation accuracy history: {validation_accuracies}'

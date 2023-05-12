@@ -16,7 +16,9 @@ ON_DEMAND_QUOTA_CODES = {
     "nvidia-tesla-a100": "NVIDIA_A100_GPUS",
 }
 
-PREEMPTIBLE_QUOTA_CODES = {k: "PREEMPTIBLE_" + v for (k, v) in ON_DEMAND_QUOTA_CODES.items()}
+PREEMPTIBLE_QUOTA_CODES = {
+    k: f"PREEMPTIBLE_{v}" for (k, v) in ON_DEMAND_QUOTA_CODES.items()
+}
 
 
 def check_quota(configs: Dict) -> None:
@@ -30,7 +32,7 @@ def check_quota(configs: Dict) -> None:
                 .execute()
             )
         except googleapiclient.errors.Error as ex:
-            raise PreflightFailure("failed to fetch quota info: %s" % ex)
+            raise PreflightFailure(f"failed to fetch quota info: {ex}")
 
         if "quotas" not in r:
             raise PreflightFailure("no quota info available")
@@ -39,22 +41,21 @@ def check_quota(configs: Dict) -> None:
         quota_code = mapping[configs["gpu_type"]]
         quota = next((q for q in r["quotas"] if q["metric"] == quota_code), None)
         if quota is None:
-            raise PreflightFailure("can't find quota metric %s" % quota_code)
+            raise PreflightFailure(f"can't find quota metric {quota_code}")
 
         gpu_quota = quota["limit"] - quota["usage"]
         gpu_required = configs["gpu_num"] * configs["max_dynamic_agents"]
     except PreflightFailure as ex:
-        print(colored("Failed to check GCP instance quota: %s" % ex, "yellow"))
+        print(colored(f"Failed to check GCP instance quota: {ex}", "yellow"))
         return
     except Exception as ex:
-        print(colored("Error while checking GCP instance quota: %s" % ex, "yellow"))
+        print(colored(f"Error while checking GCP instance quota: {ex}", "yellow"))
         return
 
     if gpu_required > gpu_quota:
         print(
             colored(
-                "Insufficient GCP GPU agent instance quota (available: %s, required: %s)"
-                % (gpu_quota, gpu_required),
+                f"Insufficient GCP GPU agent instance quota (available: {gpu_quota}, required: {gpu_required})",
                 "red",
             )
         )
@@ -62,6 +63,6 @@ def check_quota(configs: Dict) -> None:
             "See details on requesting a quota increase at: "
             "https://cloud.google.com/compute/quotas#requesting_additional_quota"
         )
-        print("Required quota type: %s" % quota_code)
+        print(f"Required quota type: {quota_code}")
         print("This check can be skipped via `det deploy --no-preflight-checks ...`")
         sys.exit(1)

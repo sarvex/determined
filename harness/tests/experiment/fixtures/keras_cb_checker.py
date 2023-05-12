@@ -78,7 +78,7 @@ def check_initial_calls(lines: List[str], **kwargs: Dict) -> None:
             assert cb in remain, f"got two {cb} on line {i}"
             remain.remove(cb)
         elif line.startswith("on_train_batch_begin"):
-            assert len(remain) == 0, f"still expecting {remain} on line {i}"
+            assert not remain, f"still expecting {remain} on line {i}"
             break
 
 

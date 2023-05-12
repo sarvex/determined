@@ -18,10 +18,10 @@ def parse_master_address(master_address: str) -> parse.ParseResult:
         default_port = 80
     else:
         default_port = 8080
-        master_address = "http://{}".format(master_address)
+        master_address = f"http://{master_address}"
     parsed = parse.urlparse(master_address)
     if not parsed.port:
-        parsed = parsed._replace(netloc="{}:{}".format(parsed.netloc, default_port))
+        parsed = parsed._replace(netloc=f"{parsed.netloc}:{default_port}")
     return parsed
 
 
@@ -44,17 +44,12 @@ def add_token_to_headers(
     headers: Dict[str, str],
     auth: Optional[authentication.Authentication],
 ) -> Dict[str, str]:
-    # Try to get user token first since it will include the user token that is used
-    # for queries in some restful APIs.
-    user_token = ""
-    if auth is not None:
-        user_token = auth.get_session_token()
+    user_token = auth.get_session_token() if auth is not None else ""
     if user_token:
-        return {**headers, "Authorization": "Bearer {}".format(user_token)}
+        return {**headers, "Authorization": f"Bearer {user_token}"}
 
-    task_token = authentication.get_task_token()
-    if task_token:
-        return {**headers, "Grpc-Metadata-x-task-token": "Bearer {}".format(task_token)}
+    if task_token := authentication.get_task_token():
+        return {**headers, "Grpc-Metadata-x-task-token": f"Bearer {task_token}"}
 
     return headers
 
@@ -77,11 +72,7 @@ def do_request(
     if cert is None:
         cert = certs.cli_cert
 
-    if headers is None:
-        h = {}  # type: Dict[str, str]
-    else:
-        h = headers
-
+    h = {} if headers is None else headers
     if params is None:
         params = {}
 
@@ -107,9 +98,7 @@ def do_request(
         raise errors.BadRequestException(str(e))
 
     if r.status_code == 403:
-        username = ""
-        if auth is not None:
-            username = auth.get_session_user()
+        username = auth.get_session_user() if auth is not None else ""
         raise errors.UnauthenticatedException(username=username)
     elif r.status_code == 404:
         raise errors.NotFoundException(r)
@@ -267,7 +256,7 @@ class WebSocket:
                 (lomond.events.ConnectFail, lomond.events.Rejected, lomond.events.ProtocolError),
             ):
                 # Any unexpected failures raise the standard API exception.
-                raise errors.BadRequestException(message="WebSocket failure: {}".format(event))
+                raise errors.BadRequestException(message=f"WebSocket failure: {event}")
             elif isinstance(event, lomond.events.Text):
                 # All web socket connections are expected to be in a JSON
                 # format.
@@ -289,5 +278,5 @@ def ws(host: str, path: str) -> WebSocket:
     """
     websocket = lomond.WebSocket(maybe_upgrade_ws_scheme(make_url(host, path)))
     token = authentication.must_cli_auth().get_session_token()
-    websocket.add_header("Authorization".encode(), "Bearer {}".format(token).encode())
+    websocket.add_header("Authorization".encode(), f"Bearer {token}".encode())
     return WebSocket(websocket)

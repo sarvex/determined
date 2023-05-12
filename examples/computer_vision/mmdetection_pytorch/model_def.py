@@ -83,7 +83,7 @@ class MMDetTrial(PyTorchTrial):
         self.scheduler.step()
 
         metrics = {"loss": loss}
-        metrics.update(log_vars)
+        metrics |= log_vars
         return metrics
 
     def evaluate_full_dataset(
@@ -118,8 +118,7 @@ class MMDetTrial(PyTorchTrial):
         for key in ["interval", "tmpdir", "start", "gpu_collect"]:
             eval_kwargs.pop(key, None)
 
-        metrics = data_loader.dataset.evaluate(results, **eval_kwargs)
-        return metrics
+        return data_loader.dataset.evaluate(results, **eval_kwargs)
 
     def build_training_data_loader(self) -> DataLoader:
         dataset, dataloader = build_dataloader(

@@ -25,22 +25,23 @@ def interactive_command(*args: str) -> Generator:
                 break
     """
 
+
+
     class _InteractiveCommandProcess:
         def __init__(self, process: subprocess.Popen, detach: bool = False):
             self.process = process
             self.detach = detach
             self.task_id = None  # type: Optional[str]
 
+            iterator = iter(self.process.stdout)  # type: ignore
             if self.detach:
-                iterator = iter(self.process.stdout)  # type: ignore
                 line = next(iterator)
                 self.task_id = line.decode().strip()
             else:
-                iterator = iter(self.process.stdout)  # type: ignore
                 line = next(iterator)
                 m = re.search(rb"Scheduling .* \(id: (.*)\)\.\.\.", line)
                 assert m is not None
-                self.task_id = m.group(1).decode() if m else None
+                self.task_id = m[1].decode() if m else None
 
         @property
         def stdout(self) -> Generator[str, None, None]:
@@ -58,18 +59,17 @@ def interactive_command(*args: str) -> Generator:
             assert self.process.stdin is not None
             return self.process.stdin
 
+
     with subprocess.Popen(
-        ("det", "-m", conf.make_master_url()) + args,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        env={"PYTHONUNBUFFERED": "1", **os.environ},
-    ) as p:
+            ("det", "-m", conf.make_master_url()) + args,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            env={"PYTHONUNBUFFERED": "1", **os.environ},
+        ) as p:
         cmd = _InteractiveCommandProcess(p, detach="--detach" in args)
         if cmd.task_id is None:
             raise AssertionError(
-                "Task ID for '{}' could not be found. "
-                "If it is still active, this command may persist "
-                "in the Determined test deployment...".format(args)
+                f"Task ID for '{args}' could not be found. If it is still active, this command may persist in the Determined test deployment..."
             )
         try:
             yield cmd
@@ -93,13 +93,13 @@ def get_num_running_commands() -> int:
 def get_command(id: str) -> Any:
     certs.cli_cert = certs.default_load(conf.make_master_url())
     authentication.cli_auth = authentication.Authentication(conf.make_master_url(), try_reauth=True)
-    r = api.get(conf.make_master_url(), "api/v1/commands/" + id)
+    r = api.get(conf.make_master_url(), f"api/v1/commands/{id}")
     assert r.status_code == requests.codes.ok, r.text
     return r.json()["command"]
 
 
 def get_command_config(command_type: str, id: str) -> str:
-    assert command_type in ["command", "notebook", "shell"]
+    assert command_type in {"command", "notebook", "shell"}
     command = ["det", "-m", conf.make_master_url(), command_type, "config", id]
     env = os.environ.copy()
     env["DET_DEBUG"] = "true"
@@ -110,7 +110,7 @@ def get_command_config(command_type: str, id: str) -> str:
         stderr=subprocess.PIPE,
         env=env,
     )
-    assert completed_process.returncode == 0, "\nstdout:\n{} \nstderr:\n{}".format(
-        completed_process.stdout, completed_process.stderr
-    )
+    assert (
+        completed_process.returncode == 0
+    ), f"\nstdout:\n{completed_process.stdout} \nstderr:\n{completed_process.stderr}"
     return str(completed_process.stdout)

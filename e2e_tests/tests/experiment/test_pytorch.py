@@ -92,7 +92,9 @@ def test_pytorch_const_warm_start() -> None:
 @pytest.mark.gpu_required  # type: ignore
 @pytest.mark.parametrize("api_style", ["apex", "auto", "manual"])  # type: ignore
 def test_pytorch_const_with_amp(api_style: str) -> None:
-    config = conf.load_config(conf.fixtures_path("pytorch_amp/" + api_style + "_amp.yaml"))
+    config = conf.load_config(
+        conf.fixtures_path(f"pytorch_amp/{api_style}_amp.yaml")
+    )
     config = conf.set_max_length(config, {"batches": 200})
 
     exp.run_basic_test_with_temp_config(config, conf.fixtures_path("pytorch_amp"), 1)

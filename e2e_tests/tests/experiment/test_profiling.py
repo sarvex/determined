@@ -89,7 +89,7 @@ def request_profiling_metric_labels(trial_id: int, timing_enabled: bool, gpu_ena
             if expected.get(metric_name, None) == metric_type:
                 del expected[metric_name]
 
-        if len(expected) > 0:
+        if expected:
             pytest.fail(
                 f"expected completed experiment to have all labels but some are missing: {expected}"
             )
@@ -153,7 +153,7 @@ def request_profiling_pytorch_timing_metrics(trial_id: int, metric_name: str) ->
             )
 
         # Check batches are monotonic with no gaps.
-        if not all(x + 1 == y for x, y in zip(batches, batches[1:])):
+        if any(x + 1 != y for x, y in zip(batches, batches[1:])):
             pytest.fail(f"skips in batches sampled: {batch}")
 
         return int(batches[-1]) + 1

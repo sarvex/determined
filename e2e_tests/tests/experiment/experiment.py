@@ -25,13 +25,13 @@ def maybe_create_native_experiment(context_dir: str, command: List[str]) -> Opti
     target_env["DET_MASTER"] = conf.make_master_url()
 
     with subprocess.Popen(
-        command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=context_dir, env=target_env
-    ) as p:
+            command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, cwd=context_dir, env=target_env
+        ) as p:
         assert p.stdout is not None
         for line in p.stdout:
             m = re.search(r"Created experiment (\d+)\n", line.decode())
             if m is not None:
-                return int(m.group(1))
+                return int(m[1])
 
     return None
 
@@ -72,12 +72,12 @@ def create_experiment(
     config_file: str, model_def_file: str, create_args: Optional[List[str]] = None
 ) -> int:
     completed_process = maybe_create_experiment(config_file, model_def_file, create_args)
-    assert completed_process.returncode == 0, "\nstdout:\n{} \nstderr:\n{}".format(
-        completed_process.stdout, completed_process.stderr
-    )
+    assert (
+        completed_process.returncode == 0
+    ), f"\nstdout:\n{completed_process.stdout} \nstderr:\n{completed_process.stderr}"
     m = re.search(r"Created experiment (\d+)\n", str(completed_process.stdout))
     assert m is not None
-    return int(m.group(1))
+    return int(m[1])
 
 
 def pause_experiment(experiment_id: int) -> None:
@@ -96,7 +96,7 @@ def change_experiment_state(experiment_id: int, new_state: str) -> None:
     authentication.cli_auth = authentication.Authentication(conf.make_master_url(), try_reauth=True)
     r = api.patch(
         conf.make_master_url(),
-        "experiments/{}".format(experiment_id),
+        f"experiments/{experiment_id}",
         headers={"Content-Type": "application/merge-patch+json"},
         body={"state": new_state},
     )
@@ -118,13 +118,9 @@ def wait_for_experiment_state(
     for seconds_waited in range(max_wait_secs):
         try:
             state = experiment_state(experiment_id)
-        # Ignore network errors while polling for experiment state to avoid a
-        # single network flake to cause a test suite failure. If the master is
-        # unreachable multiple times, this test will fail after max_wait_secs.
         except api.errors.MasterNotFoundException:
             logging.warning(
-                "Network failure ignored when polling for state of "
-                "experiment {}".format(experiment_id)
+                f"Network failure ignored when polling for state of experiment {experiment_id}"
             )
             time.sleep(1)
             continue
@@ -156,38 +152,34 @@ def wait_for_experiment_state(
             cancel_experiment(experiment_id)
             report_failed_experiment(experiment_id, "CANCELED")
         pytest.fail(
-            "Experiment did not reach target state {} after {} seconds".format(
-                target_state, max_wait_secs
-            )
+            f"Experiment did not reach target state {target_state} after {max_wait_secs} seconds"
         )
 
 
 def experiment_has_active_workload(experiment_id: int) -> bool:
     r = api.get(conf.make_master_url(), "tasks").json()
-    for task in r.values():
-        if "Experiment {}".format(experiment_id) in task["name"] and len(task["containers"]) > 0:
-            return True
-
-    return False
+    return any(
+        f"Experiment {experiment_id}" in task["name"]
+        and len(task["containers"]) > 0
+        for task in r.values()
+    )
 
 
 def experiment_json(experiment_id: int) -> Dict[str, Any]:
     certs.cli_cert = certs.default_load(conf.make_master_url())
     authentication.cli_auth = authentication.Authentication(conf.make_master_url(), try_reauth=True)
-    r = api.get(conf.make_master_url(), "experiments/{}".format(experiment_id))
+    r = api.get(conf.make_master_url(), f"experiments/{experiment_id}")
     assert r.status_code == requests.codes.ok, r.text
     json = r.json()  # type: Dict[str, Any]
     return json
 
 
 def experiment_state(experiment_id: int) -> str:
-    state = experiment_json(experiment_id)["state"]  # type: str
-    return state
+    return experiment_json(experiment_id)["state"]
 
 
 def experiment_trials(experiment_id: int) -> List[Dict[str, Any]]:
-    trials = experiment_json(experiment_id)["trials"]  # type: List[Dict[str, Any]]
-    return trials
+    return experiment_json(experiment_id)["trials"]
 
 
 def num_experiments() -> int:
@@ -210,13 +202,13 @@ def cancel_single(experiment_id: int, should_have_trial: bool = False) -> None:
 
 
 def is_terminal_state(state: str) -> bool:
-    return state in ("CANCELED", "COMPLETED", "ERROR")
+    return state in {"CANCELED", "COMPLETED", "ERROR"}
 
 
 def trial_metrics(trial_id: int) -> Dict[str, Any]:
     certs.cli_cert = certs.default_load(conf.make_master_url())
     authentication.cli_auth = authentication.Authentication(conf.make_master_url(), try_reauth=True)
-    r = api.get(conf.make_master_url(), "trials/{}/metrics".format(trial_id))
+    r = api.get(conf.make_master_url(), f"trials/{trial_id}/metrics")
     assert r.status_code == requests.codes.ok, r.text
     json = r.json()  # type: Dict[str, Any]
     return json
@@ -252,10 +244,7 @@ def trial_logs(trial_id: int) -> List[str]:
 
 def check_if_string_present_in_trial_logs(trial_id: int, target_string: str) -> bool:
     logs = trial_logs(trial_id)
-    for log_line in logs:
-        if target_string in log_line:
-            return True
-    return False
+    return any(target_string in log_line for log_line in logs)
 
 
 def assert_equivalent_trials(A: int, B: int, validation_metrics: List[str]) -> None:
@@ -369,7 +358,7 @@ def run_list_cli_tests(experiment_id: int) -> None:
 
 def report_failed_experiment(experiment_id: int, state: str) -> None:
     print(
-        "Experiment {} terminated in {} state unexpectedly!".format(experiment_id, state),
+        f"Experiment {experiment_id} terminated in {state} state unexpectedly!",
         file=sys.stderr,
     )
 
@@ -379,9 +368,7 @@ def report_failed_experiment(experiment_id: int, state: str) -> None:
     canceled_trials = [t for t in trials if t["state"] == "CANCELED"]
 
     print(
-        "Experiment {}: {} trials, {} active trials, {} failed trials, {} canceled trials".format(
-            experiment_id, len(trials), len(active_trials), len(error_trials), len(canceled_trials)
-        ),
+        f"Experiment {experiment_id}: {len(trials)} trials, {len(active_trials)} active trials, {len(error_trials)} failed trials, {len(canceled_trials)} canceled trials",
         file=sys.stderr,
     )
 
@@ -395,9 +382,9 @@ def report_failed_trial(trial_id: int, state: str) -> None:
 
 
 def print_trial_logs(trial_id: int) -> None:
-    print("******** Start of logs for trial {} ********".format(trial_id), file=sys.stderr)
+    print(f"******** Start of logs for trial {trial_id} ********", file=sys.stderr)
     print("".join(trial_logs(trial_id)), file=sys.stderr)
-    print("******** End of logs for trial {} ********".format(trial_id), file=sys.stderr)
+    print(f"******** End of logs for trial {trial_id} ********", file=sys.stderr)
 
 
 def run_basic_test(
@@ -472,7 +459,7 @@ def verify_completed_experiment_metadata(
             break
         time.sleep(1)
     else:
-        raise AssertionError("Slots failed to free after experiment {}".format(experiment_id))
+        raise AssertionError(f"Slots failed to free after experiment {experiment_id}")
 
     # Run a series of CLI tests on the finished experiment, to sanity check
     # that basic CLI commands don't raise errors.
@@ -535,11 +522,12 @@ class ExperimentDurations:
         self.checkpoint_duration = checkpoint_duration
 
     def __str__(self) -> str:
-        duration_strs = []
-        duration_strs.append(f"experiment duration: {self.experiment_duration}")
-        duration_strs.append(f"training duration: {self.training_duration}")
-        duration_strs.append(f"validation duration: {self.validation_duration}")
-        duration_strs.append(f"checkpoint duration: {self.checkpoint_duration}")
+        duration_strs = [
+            f"experiment duration: {self.experiment_duration}",
+            f"training duration: {self.training_duration}",
+            f"validation duration: {self.validation_duration}",
+            f"checkpoint duration: {self.checkpoint_duration}",
+        ]
         return "\n".join(duration_strs)
 
 

@@ -40,11 +40,12 @@ def prepare_features(
 ):
     question_column_name = "question" if "question" in column_names else column_names[0]
     context_column_name = "context" if "context" in column_names else column_names[1]
-    answer_column_name = "answers" if "answers" in column_names else column_names[2]
-
     # Padding side determines if we do (question|context) or (context|question).
     pad_on_right = tokenizer.padding_side == "right"
 
+    answer_column_name = (
+        "answers" if "answers" in column_names else column_names[2]
+    )
     if data_args.max_seq_length > tokenizer.model_max_length:
         logger.warning(
             f"The max_seq_length passed ({data_args.max_seq_length}) is larger than the maximum "
@@ -138,9 +139,9 @@ def prepare_features(
                     token_end_index -= 1
                 # Detect if the answer is out of the span (in which case this feature is labeled
                 # with the CLS index).
-                if not (
-                    offsets[token_start_index][0] <= start_char
-                    and offsets[token_end_index][1] >= end_char
+                if (
+                    offsets[token_start_index][0] > start_char
+                    or offsets[token_end_index][1] < end_char
                 ):
                     tokenized_examples["start_positions"].append(cls_index)
                     tokenized_examples["end_positions"].append(cls_index)

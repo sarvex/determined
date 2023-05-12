@@ -77,7 +77,7 @@ def get_trial_profiler_available_series(
         params={"follow": follow},
     )
     j = response.json()
-    labels = [
+    return [
         TrialProfilerSeriesLabels(
             trial_id=ld["trialId"],
             name=ld["name"],
@@ -87,4 +87,3 @@ def get_trial_profiler_available_series(
         )
         for ld in j["result"]["labels"]
     ]
-    return labels

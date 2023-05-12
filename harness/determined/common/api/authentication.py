@@ -72,7 +72,7 @@ class Authentication:
         if token is not None:
             return Session(session_user, token)
 
-        if token is None and not try_reauth:
+        if not try_reauth:
             raise api.errors.UnauthenticatedException(username=session_user)
 
         if password is None and session_user == constants.DEFAULT_DETERMINED_USER:
@@ -81,7 +81,7 @@ class Authentication:
             session_user = input("Username: ")
 
         if password is None:
-            password = getpass.getpass("Password for user '{}': ".format(session_user))
+            password = getpass.getpass(f"Password for user '{session_user}': ")
 
         if password:
             password = api.salt_and_hash(password)
@@ -140,7 +140,7 @@ def _is_token_valid(master_address: str, token: str, cert: Optional[certs.Cert])
     Find out whether the given token is valid by attempting to use it
     on the "/users/me" endpoint.
     """
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
     try:
         r = api.get(master_address, "users/me", headers=headers, authenticated=False, cert=cert)
     except (api.errors.UnauthenticatedException, api.errors.APIException):
@@ -163,8 +163,8 @@ class TokenStore:
         self.path = path or util.get_config_path().joinpath("auth.json")
         self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         # Decide on paths for a lock file and a temp files (during writing)
-        self.temp = pathlib.Path(str(self.path) + ".temp")
-        self.lock = pathlib.Path(str(self.path) + ".lock")
+        self.temp = pathlib.Path(f"{str(self.path)}.temp")
+        self.lock = pathlib.Path(f"{str(self.path)}.lock")
 
         with filelock.FileLock(self.lock):
             store = self._load_store_file()
@@ -220,11 +220,7 @@ class TokenStore:
         """
         with filelock.FileLock(self.lock):
             store = self._load_store_file()
-            substore = store.setdefault("masters", {}).setdefault(self.master_address, {})
-
-            # No need for try/finally, because we don't update the file after failures.
-            yield substore
-
+            yield store.setdefault("masters", {}).setdefault(self.master_address, {})
             # Reconfigure our cached variables.
             self._reconfigure_from_store(store)
 
@@ -271,8 +267,7 @@ def shim_store_v0(v0: Dict[str, Any], master_address: str) -> Dict[str, Any]:
     """
     v1 schema is just a bit more nesting to support multiple masters.
     """
-    v1 = {"version": 1, "masters": {master_address: v0}}
-    return v1
+    return {"version": 1, "masters": {master_address: v0}}
 
 
 def validate_token_store_v0(store: Any) -> bool:
@@ -291,13 +286,12 @@ def validate_token_store_v0(store: Any) -> bool:
     if not isinstance(store, dict):
         raise api.errors.CorruptTokenCacheException()
 
-    if len(set(store.keys()).difference({"active_user", "tokens"})) > 0:
+    if set(store.keys()).difference({"active_user", "tokens"}):
         # Extra keys.
         raise api.errors.CorruptTokenCacheException()
 
-    if "active_user" in store:
-        if not isinstance(store["active_user"], str):
-            raise api.errors.CorruptTokenCacheException()
+    if "active_user" in store and not isinstance(store["active_user"], str):
+        raise api.errors.CorruptTokenCacheException()
 
     if "tokens" in store:
         tokens = store["tokens"]
@@ -340,7 +334,7 @@ def validate_token_store_v1(store: Any) -> bool:
     if not isinstance(store, dict):
         raise api.errors.CorruptTokenCacheException()
 
-    if len(set(store.keys()).difference({"version", "masters"})) > 0:
+    if set(store.keys()).difference({"version", "masters"}):
         # Extra keys.
         raise api.errors.CorruptTokenCacheException()
 
@@ -391,11 +385,8 @@ def optional(func: Callable[[argparse.Namespace], Any]) -> Callable[[argparse.Na
     def f(namespace: argparse.Namespace) -> Any:
         global cli_auth
         v = vars(namespace)
-        try:
+        with contextlib.suppress(api.errors.UnauthenticatedException):
             cli_auth = Authentication(namespace.master, v.get("user"), try_reauth=False)
-        except api.errors.UnauthenticatedException:
-            pass
-
         return func(namespace)
 
     return f

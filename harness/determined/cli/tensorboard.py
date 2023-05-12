@@ -36,14 +36,11 @@ def start_tensorboard(args: Namespace) -> None:
         print(resp["id"])
         return
 
-    url = "tensorboard/{}/events".format(resp["id"])
+    url = f'tensorboard/{resp["id"]}/events'
     with api.ws(args.master, url) as ws:
         for msg in ws:
-            if msg["log_event"] is not None:
-                # TensorBoard will print a url by default. The URL is incorrect since
-                # TensorBoard is not aware of the master proxy address it is assigned.
-                if "http" in msg["log_event"]:
-                    continue
+            if msg["log_event"] is not None and "http" in msg["log_event"]:
+                continue
 
             if msg["service_ready_event"]:
                 if args.no_browser:
@@ -51,7 +48,7 @@ def start_tensorboard(args: Namespace) -> None:
                 else:
                     url = api.open(args.master, resp["serviceAddress"])
 
-                print(colored("TensorBoard is running at: {}".format(url), "green"))
+                print(colored(f"TensorBoard is running at: {url}", "green"))
                 render_event_stream(msg)
                 break
             render_event_stream(msg)
@@ -59,9 +56,9 @@ def start_tensorboard(args: Namespace) -> None:
 
 @authentication.required
 def open_tensorboard(args: Namespace) -> None:
-    resp = api.get(args.master, "api/v1/tensorboards/{}".format(args.tensorboard_id)).json()[
-        "tensorboard"
-    ]
+    resp = api.get(
+        args.master, f"api/v1/tensorboards/{args.tensorboard_id}"
+    ).json()["tensorboard"]
     check_eq(resp["state"], "STATE_RUNNING", "TensorBoard must be in a running state")
     api.open(args.master, resp["serviceAddress"])
 

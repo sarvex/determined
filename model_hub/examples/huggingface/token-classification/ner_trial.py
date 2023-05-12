@@ -39,15 +39,13 @@ class NERTrial(hf.BaseTransformerTrial):
             datasets_metadata.label_to_id,
         )
         train_length = len(self.tokenized_datasets["train"])
-        self.logger.info("training records: {}".format(train_length))
+        self.logger.info(f"training records: {train_length}")
         if (
             "records_per_epoch" in self.exp_config
             and train_length != self.exp_config["records_per_epoch"]
         ):
             self.logger.warning(
-                "number of train records {} does not match records_per_epoch of {}".format(
-                    train_length, self.exp_config["records_per_epoch"]
-                )
+                f'number of train records {train_length} does not match records_per_epoch of {self.exp_config["records_per_epoch"]}'
             )
 
         # Create metric reducer

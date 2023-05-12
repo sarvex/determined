@@ -47,7 +47,7 @@ class MNISTDataModule(pl.LightningDataModule):
         os.makedirs(download_directory, exist_ok=True)
         filepath = os.path.join(download_directory, basename)
         if not os.path.exists(filepath):
-            logging.info("Downloading {} to {}".format(self.data_url, filepath))
+            logging.info(f"Downloading {self.data_url} to {filepath}")
 
             r = requests.get(self.data_url, stream=True)
             with open(filepath, "wb") as f:

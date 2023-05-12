@@ -40,11 +40,7 @@ def check_version(parsed_args: argparse.Namespace) -> None:
     if not master_version:
         print(
             termcolor.colored(
-                "Master not found at {}. "
-                "Hint: Remember to set the DET_MASTER environment variable "
-                "to the correct Determined master IP or use the '-m' flag.".format(
-                    parsed_args.master
-                ),
+                f"Master not found at {parsed_args.master}. Hint: Remember to set the DET_MASTER environment variable to the correct Determined master IP or use the '-m' flag.",
                 "yellow",
             ),
             file=sys.stderr,
@@ -52,8 +48,7 @@ def check_version(parsed_args: argparse.Namespace) -> None:
     elif version.Version(client_version) < version.Version(master_version):
         print(
             termcolor.colored(
-                "CLI version {} is less than master version {}. "
-                "Consider upgrading the CLI.".format(client_version, master_version),
+                f"CLI version {client_version} is less than master version {master_version}. Consider upgrading the CLI.",
                 "yellow",
             ),
             file=sys.stderr,
@@ -61,8 +56,7 @@ def check_version(parsed_args: argparse.Namespace) -> None:
     elif version.Version(client_version) > version.Version(master_version):
         print(
             termcolor.colored(
-                "Master version {} is less than CLI version {}. "
-                "Consider upgrading the master.".format(master_version, client_version),
+                f"Master version {master_version} is less than CLI version {client_version}. Consider upgrading the master.",
                 "yellow",
             ),
             file=sys.stderr,

@@ -38,12 +38,14 @@ def update_user(
     if agent_user_group is not None:
         request["agent_user_group"] = agent_user_group
 
-    return api.patch(master_address, "users/{}".format(username), body=request)
+    return api.patch(master_address, f"users/{username}", body=request)
 
 
 def update_username(current_username: str, master_address: str, new_username: str) -> Response:
     request = {"username": new_username}
-    return api.patch(master_address, "users/{}/username".format(current_username), body=request)
+    return api.patch(
+        master_address, f"users/{current_username}/username", body=request
+    )
 
 
 @authentication.required
@@ -69,7 +71,7 @@ def log_in_user(parsed_args: Namespace) -> None:
     else:
         username = parsed_args.username
 
-    message = "Password for user '{}': ".format(username)
+    message = f"Password for user '{username}': "
 
     # In order to not send clear-text passwords, we hash the password.
     password = api.salt_and_hash(getpass.getpass(message))
@@ -91,7 +93,7 @@ def log_out_user(parsed_args: Namespace) -> None:
         api.post(
             parsed_args.master,
             "logout",
-            headers={"Authorization": "Bearer {}".format(auth.get_session_token())},
+            headers={"Authorization": f"Bearer {auth.get_session_token()}"},
             authenticated=False,
         )
     except api.errors.APIException as e:
@@ -121,7 +123,7 @@ def change_password(parsed_args: Namespace) -> None:
         print(colored("Please log in as an admin or user to change passwords", "red"))
         return
 
-    password = getpass.getpass("New password for user '{}': ".format(username))
+    password = getpass.getpass(f"New password for user '{username}': ")
     check_password = getpass.getpass("Confirm password: ")
 
     if password != check_password:
@@ -177,7 +179,7 @@ def whoami(parsed_args: Namespace) -> None:
     response = api.get(parsed_args.master, "users/me")
     user = response.json()
 
-    print("You are logged in as user '{}'".format(user["username"]))
+    print(f"""You are logged in as user '{user["username"]}'""")
 
 
 # fmt: off

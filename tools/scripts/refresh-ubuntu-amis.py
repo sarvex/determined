@@ -49,7 +49,7 @@ def get_ubuntu_ami(release: str, region: str) -> Union[None, str]:
 
     if len(results) > 1:
         print(f"Found multiple AMIs for {region}!", file=sys.stderr)
-    if len(results) == 0:
+    if not results:
         print(f"Failed to find AMI for {region}!", file=sys.stderr)
         return None
 

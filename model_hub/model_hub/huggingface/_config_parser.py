@@ -30,21 +30,21 @@ class FlexibleDataclass:
                 setattr(self, f.name, f.default)
 
     def as_dict(self) -> Dict[str, Any]:
-        output = {}
-        for f in dataclasses.fields(self):
-            if hasattr(self, f.name):
-                output[f.name] = getattr(self, f.name)
-        return output
+        return {
+            f.name: getattr(self, f.name)
+            for f in dataclasses.fields(self)
+            if hasattr(self, f.name)
+        }
 
     def __repr__(self) -> str:
         fields_str = ", ".join(
             [
-                "{}={}".format(f.name, getattr(self, f.name))
+                f"{f.name}={getattr(self, f.name)}"
                 for f in dataclasses.fields(self)
                 if hasattr(self, f.name)
             ]
         )
-        return self.__class__.__qualname__ + f"({fields_str})"
+        return f"{self.__class__.__qualname__}({fields_str})"
 
 
 @dataclasses.dataclass(init=False, repr=False)

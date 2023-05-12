@@ -70,9 +70,7 @@ class Discriminator(nn.Module):
 
     def forward(self, img):
         img_flat = img.view(img.size(0), -1)
-        validity = self.model(img_flat)
-
-        return validity
+        return self.model(img_flat)
 
 
 """### C. GAN
@@ -143,13 +141,13 @@ class GAN(pl.LightningModule):
             # adversarial loss is binary cross-entropy
             g_loss = self.adversarial_loss(self.discriminator(self(z)), valid)
             tqdm_dict = {'g_loss': g_loss}
-            output = OrderedDict({
-                'loss': g_loss,
-                # 'progress_bar': tqdm_dict, # not valid in PyTorchTrial
-                # 'log': tqdm_dict,
-            })
-            return output
-
+            return OrderedDict(
+                {
+                    'loss': g_loss,
+                    # 'progress_bar': tqdm_dict, # not valid in PyTorchTrial
+                    # 'log': tqdm_dict,
+                }
+            )
         # train discriminator
         if optimizer_idx == 1:
             # Measure discriminator's ability to classify real from generated samples
@@ -170,12 +168,13 @@ class GAN(pl.LightningModule):
             # discriminator loss is the average of these
             d_loss = (real_loss + fake_loss) / 2
             tqdm_dict = {'d_loss': d_loss}
-            output = OrderedDict({
-                'loss': d_loss,
-                # 'progress_bar': tqdm_dict,
-                # 'log': tqdm_dict
-            })
-            return output
+            return OrderedDict(
+                {
+                    'loss': d_loss,
+                    # 'progress_bar': tqdm_dict,
+                    # 'log': tqdm_dict
+                }
+            )
 
     # CHANGE add validation step
     def validation_step(self, batch, batch_idx, *args, **kwargs):

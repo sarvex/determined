@@ -68,7 +68,7 @@ def list_models(args: Namespace) -> None:
 @authentication.required
 def list_versions(args: Namespace) -> None:
     if args.json:
-        r = api.get(args.master, "models/{}/versions".format(args.name))
+        r = api.get(args.master, f"models/{args.name}/versions")
         data = r.json()
         print(json.dumps(data, indent=2))
 
@@ -128,7 +128,7 @@ def register_version(args: Namespace) -> None:
     if args.json:
         resp = api.post(
             args.master,
-            "/api/v1/models/{}/versions".format(args.name),
+            f"/api/v1/models/{args.name}/versions",
             body={"checkpoint_uuid": args.uuid},
         )
 

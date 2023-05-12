@@ -65,8 +65,8 @@ def get_dataset_metadata(
     features = raw_datasets["train"].features
     text_column_name = "tokens" if "tokens" in column_names else column_names[0]
     label_column_name = (
-        "{}_tags".format(hparams.finetuning_task)
-        if "{}_tags".format(hparams.finetuning_task) in column_names
+        f"{hparams.finetuning_task}_tags"
+        if f"{hparams.finetuning_task}_tags" in column_names
         else column_names[1]
     )
 

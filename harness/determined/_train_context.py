@@ -119,9 +119,7 @@ class _TrainContext(metaclass=abc.ABCMeta):
         """
         if name not in self.env.hparams:
             raise ValueError(
-                "Could not find name '{}' in experiment "
-                "hyperparameters. Please check your experiment "
-                "configuration 'hyperparameters' section.".format(name)
+                f"Could not find name '{name}' in experiment hyperparameters. Please check your experiment configuration 'hyperparameters' section."
             )
         if name == "global_batch_size":
             logging.warning(
@@ -204,11 +202,7 @@ class DistributedContext:
         self._hvd_config = hvd_config
         self._rendezvous_info = rendezvous_info
 
-        if self._hvd_config.use:
-            self._is_chief = horovod.hvd.rank() == 0
-        else:
-            self._is_chief = True
-
+        self._is_chief = horovod.hvd.rank() == 0 if self._hvd_config.use else True
         if self._hvd_config.use:
             # Initialize zmq comms.
             srv_pub_port = (
@@ -244,10 +238,7 @@ class DistributedContext:
         unique ID within the trial; that is, no two processes in the same trial
         will be assigned the same rank.
         """
-        if not self._hvd_config.use:
-            return 0
-
-        return cast(int, horovod.hvd.rank())
+        return 0 if not self._hvd_config.use else cast(int, horovod.hvd.rank())
 
     def get_local_rank(self) -> int:
         """
@@ -256,10 +247,7 @@ class DistributedContext:
         in the same trial that are executing on the same agent will be assigned
         the same rank.
         """
-        if not self._hvd_config.use:
-            return 0
-
-        return cast(int, horovod.hvd.local_rank())
+        return 0 if not self._hvd_config.use else cast(int, horovod.hvd.local_rank())
 
     def get_size(self) -> int:
         """

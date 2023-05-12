@@ -439,7 +439,7 @@ class _PyTorchReducerContext:
                         "mapping names to metrics if you with to return multiple metrics from "
                         "a single reducer."
                     )
-                metrics.update(reduced)
+                metrics |= reduced
             else:
                 if isinstance(reduced, dict):
                     # Disallow users from returning dict-like metrics if they provided a name,

@@ -26,8 +26,7 @@ def collate_fn(batch):
 
 
 def get_transform():
-    transforms = []
-    transforms.append(ToTensor())
+    transforms = [ToTensor()]
     return Compose(transforms)
 
 
@@ -82,14 +81,14 @@ class PennFudanDataset(object):
         # suppose all instances are not crowd
         iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
 
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["masks"] = masks
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
-
+        target = {
+            "boxes": boxes,
+            "labels": labels,
+            "masks": masks,
+            "image_id": image_id,
+            "area": area,
+            "iscrowd": iscrowd,
+        }
         if self.transforms is not None:
             img = self.transforms(img)
 

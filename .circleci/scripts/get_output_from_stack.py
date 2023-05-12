@@ -5,10 +5,9 @@ import boto3
 
 def get_output_from_stack(stack_name: str, output_key: str) -> str:
     stack = boto3.resource("cloudformation").Stack(stack_name)
-    output_value = list(filter(lambda d: d["OutputKey"] == output_key, stack.outputs))[0][
-        "OutputValue"
-    ]  # type: str
-    return output_value
+    return list(filter(lambda d: d["OutputKey"] == output_key, stack.outputs))[
+        0
+    ]["OutputValue"]
 
 
 def main() -> None:

@@ -56,7 +56,8 @@ test_pipeline = [
 ]
 data = dict(
     train=dict(
-        seg_prefix=data_root + "stuffthingmaps/train2017/", pipeline=train_pipeline
+        seg_prefix=f"{data_root}stuffthingmaps/train2017/",
+        pipeline=train_pipeline,
     ),
     val=dict(pipeline=test_pipeline),
     test=dict(pipeline=test_pipeline),
