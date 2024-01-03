@@ -31,7 +31,7 @@
     "js-sha512": "^0.8.0",
     "js-yaml": "^4.1.0",
     "omnibar": "github:hamidzr/omnibar",
-    "plotly.js": "^1.56.0",
+    "plotly.js": "^2.25.2",
     "portable-fetch": "^3.0.0",
     "pretty-bytes": "^5.4.1",
     "query-string": "^7.0.0",
