@@ -10,7 +10,6 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/bufbuild/buf v0.42.1
 	github.com/containerd/containerd v1.3.2 // indirect
-	github.com/determined-ai/determined/proto v0.0.0-00010101000000-000000000000
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0
@@ -30,14 +29,13 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/jackc/pgconn v1.8.0
-	github.com/jackc/pgtype v1.6.2
-	github.com/jackc/pgx/v4 v4.10.1
+	github.com/jackc/pgconn v1.14.3
+	github.com/jackc/pgtype v1.14.0
+	github.com/jackc/pgx/v4 v4.18.2
 	github.com/jmoiron/sqlx v1.2.1-0.20190826204134-d7d95172beb5
 	github.com/labstack/echo-contrib v0.11.0
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/labstack/gommon v0.3.0
-	github.com/lib/pq v1.8.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/o1egl/paseto v1.0.0
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
@@ -55,9 +53,9 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/uber/jaeger-client-go v2.25.0+incompatible
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
-	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023
-	golang.org/x/tools v0.1.0
+	golang.org/x/crypto v0.20.0
+	golang.org/x/net v0.21.0
+	golang.org/x/tools v0.6.0
 	google.golang.org/api v0.26.0
 	google.golang.org/grpc v1.37.0-dev.0.20210309003715-fce74a94bdff
 	google.golang.org/grpc/examples v0.0.0-20210525230658-4bae49e05b28 // indirect
